@@ -1,0 +1,7 @@
+.table {
+    display: grid; 
+    grid-template-columns: repeat(3,10vh);
+    grid-template-rows: repeat(3,10vh);
+    justify-content: center;
+    border:1px black solid;
+}
