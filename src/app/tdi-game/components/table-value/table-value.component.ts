@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { TableElement } from 'src/app/shared/types/types';
 
 @Component({
@@ -6,21 +6,36 @@ import { TableElement } from 'src/app/shared/types/types';
   templateUrl: './table-value.component.html',
   styleUrls: ['./table-value.component.scss']
 })
-export class TableValueComponent implements OnInit {
-   
-  @Input() element!: TableElement;
-  @Input() columns!:number; 
-  @Input() rows!:number;
-  public variableHeight!:number;
-  public variableWidth!:number;
+export class TableValueComponent implements OnInit, AfterViewInit {
 
-  constructor() { 
-     
+  @Input() element!: TableElement;
+  @Input() columns!: number;
+  @Input() rows!: number;
+  @Input() tableWidth!: number;
+  @Input() variableHeight!: number;
+  @Input() variableWidth!:number; 
+
+
+  constructor(public elementRef: ElementRef) {
   }
+
+
 
   ngOnInit(): void {
-    this.variableWidth = 25;
-   this.variableHeight = 15; 
+
   }
 
+  ngAfterViewInit(): void {
+
+  }
+
+
+  // public sizeCalculator() {
+  // let adjustVariable = 0.9;
+  //  while(this.tableWidth - 35 < this.variableWidth * this.columns) {
+  //     this.variableWidth *= adjustVariable;
+  //     adjustVariable -= 0.1;
+  //     console.log("hola");
+  //   }
+  // }
 }

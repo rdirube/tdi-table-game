@@ -4,12 +4,12 @@
         <ox-text  originalText="-- TABLA --"
         fontSize="7.5vh" color="black" font="dinnRegular"></ox-text>
     </div>
-    <div style="background-color: khaki; width: 135vh; height: 80vh;transform:translateY(10vh)" fxLayout="column" fxLayoutAlign="center center">
-       <div *ngFor="let row of testTableValues; let t = index" fxLayout="row"> 
-          <div *ngFor="let element of testTableValues[0]; let i = index" >
-              <app-table-value [rows]="testTableValues.length" [columns]="testTableValues[0].length" [element]="testTableValues[t][i]"></app-table-value>
-          </div>
+     <div style="background-color: khaki; width: 150vh; height: 85vh;" fxLayoutAlign="center center">
+      <div [ngStyle]="{'width' : tableWidth + 'vh'}" fxLayout="row wrap" fxLayoutAlign="center center">
+       <div #cells *ngFor="let row of testCompleteTable; let t = index" fxLayoutAlign="center center"> 
+              <app-table-value [rows]="rowsQuantity" [variableWidth]="measures.width" [variableHeight]="measures.height" [tableWidth]="tableWidth"  [columns]="testTableProperties.length" [element]="testCompleteTable[t]"></app-table-value>
        </div>
+     </div>
     </div>
   </div>
 </div>
