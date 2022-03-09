@@ -1,41 +1,212 @@
-import { Component, ElementRef, Input, OnInit, ViewChild, AfterViewInit } from '@angular/core';
-import { TableElement } from 'src/app/shared/types/types';
+import { Component, ElementRef, Input, OnInit, ViewChild, AfterViewInit, EventEmitter, Output, AfterViewChecked } from '@angular/core';
+import { InitState, TableElement } from 'src/app/shared/types/types';
+import { TdiChallengeService } from 'src/app/shared/services/tdi-challenge.service';
+import { TdiAnswerService } from 'src/app/shared/services/tdi-answer.service';
+import { GameActionsService, HintService } from 'micro-lesson-core';
+import { empty } from 'rxjs';
+import { CorrectablePart, isEven, PartCorrectness, PartFormat } from 'ox-types';
+import { SubscriberOxDirective } from 'micro-lesson-components';
+import anime from 'animejs'
 
 @Component({
   selector: 'app-table-value',
   templateUrl: './table-value.component.html',
   styleUrls: ['./table-value.component.scss']
 })
-export class TableValueComponent implements OnInit, AfterViewInit {
 
+export class TableValueComponent extends SubscriberOxDirective implements OnInit, AfterViewInit, AfterViewChecked {
+
+
+  @ViewChild('wordInput') wordInput !: ElementRef;
+  @ViewChild('wordOxText') wordOxText !: ElementRef;
+  @ViewChild('elementContainer') elementContainer !: ElementRef;
+  @ViewChild('blockedDiv') blockedDiv !: ElementRef;
+
+  @Output() restoreCellsColours  = new EventEmitter<number>();
+  @Output() initEmitter = new EventEmitter();
   @Input() element!: TableElement;
+  @Input() duplicatedElement!:TableElement;
   @Input() columns!: number;
   @Input() rows!: number;
   @Input() tableWidth!: number;
   @Input() variableHeight!: number;
   @Input() variableWidth!:number; 
+  @Input() init!:InitState;
+  public answer!:any;
 
 
-  constructor(public elementRef: ElementRef) {
+  constructor(public elementRef: ElementRef, public challengeService:TdiChallengeService,
+    private hintService: HintService,
+    private gameActions: GameActionsService<any>,
+    public answerService: TdiAnswerService) {
+      super()
+      this.addSubscription(this.gameActions.checkedAnswer, x => {
+        if(this.element.isSelected) {
+          this.answerCorrection()
+        }   
+      })
   }
+
 
 
 
   ngOnInit(): void {
+    this.parsedTypes(this.element.elementType, this.element);
+    this.setAnswer();
 
   }
+
+
+
+
 
   ngAfterViewInit(): void {
-
   }
 
 
-  // public sizeCalculator() {
-  // let adjustVariable = 0.9;
-  //  while(this.tableWidth - 35 < this.variableWidth * this.columns) {
-  //     this.variableWidth *= adjustVariable;
-  //     adjustVariable -= 0.1;
-  //     console.log("hola");
-  //   }
-  // }
+  ngAfterViewChecked(): void {
+    
+  }
+
+
+
+ private setAnswer() {
+  if(this.element.isAnswer) {
+    this.answer = this.element.value.text;
+  }
+  if(this.element.elementType === 'empty') {
+    this.element.value.text = '';
+  }
+ }
+
+
+
+
+  focusCell() {
+    if(this.element.elementType !== 'hidden') {
+      if(this.element.elementType === 'empty' ) {
+        this.wordInput.nativeElement.focus();
+      }
+      this.tableElementCorrectablePart();
+      this.restoreCellsColours.emit(this.element.id - 1);
+      this.hintService.checkHintAvailable();
+    }
+  }
+
+
+
+
+  public parsedTypes(type: string, element: TableElement) {
+    switch (type) {
+      case 'Fijo':
+        element.elementType = 'fixed';
+        break;
+      case 'A completar':
+        element.elementType = 'empty';
+        break;
+      case 'Tapado':
+        element.elementType = 'hidden';
+        break;
+      case 'Encabezado':
+        element.elementType = 'property';
+    }
+  }
+
+  
+
+
+  public answerCorrection () {
+    if(this.answer === this.wordInput.nativeElement.value) {
+      this.correctAnswerAnimation();
+      this.element.elementType = 'correct';
+      console.log(this.element.elementType)
+    } else {
+      this.wrongAnswerAnimation();
+    }
+  }
+
+
+
+
+  isAnswerReady() {
+    const fixedCondition = this.element.elementType === 'empty' && this.element.value.text !== '';
+    const emptyCondition = this.element.elementType === 'fixed' && this.element.isSelected;
+    if (fixedCondition || emptyCondition) {
+      this.gameActions.actionToAnswer.emit()
+    }
+  }
+
+
+
+
+  public tableElementCorrectablePart(): void {
+    const correctablePart = 
+       [{
+        correctness: (this.answer === this.wordInput.nativeElement.value ? 'correct' : 'wrong') as PartCorrectness,
+        parts: [
+          {
+            format: 'word-text' as PartFormat,
+            value: this.wordInput.nativeElement.value as string
+          }]
+      }]
+   
+    this.answerService.currentAnswer = {
+      parts: correctablePart as CorrectablePart[]
+    }
+    this.isAnswerReady();
+  }
+
+
+
+
+  correctAnswerAnimation() {
+    anime({
+      targets: this.elementContainer.nativeElement,
+      backgroundColor: '#0FFF50',
+      duration: 500
+    })
+  }
+
+
+  wrongAnswerAnimation() {
+      anime({
+        targets: this.elementContainer.nativeElement,
+        duration: 550,
+        loop:2,
+        direction:'alternate',
+        keyframes: [{
+          backgroundColor: '#FF2D00'
+        }],
+        easing: 'linear'    
+  })
 }
+
+
+public unBloquedAnimation() {
+  anime({
+    targets: this.blockedDiv.nativeElement,
+    duration: 550,
+    opacity: [1,0] ,
+    easing: 'linear',
+    complete: () => {
+      this.element.elementType = 'fixed'
+    }      
+})
+}
+
+public bloquedAnimation() {
+  anime({
+    begin: () => {
+      this.element.elementType === 'hidden-hint'
+    },
+    targets: this.blockedDiv.nativeElement,
+    duration: 550,
+    opacity: [1,0] ,
+    easing: 'linear',    
+})
+}
+
+
+}
+
+

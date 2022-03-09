@@ -9,10 +9,12 @@ import {
 } from 'micro-lesson-core';
 import { TdiChallengeService } from 'src/app/shared/services/tdi-challenge.service';
 import { ExerciseOx } from 'ox-core';
-import { anyElement, duplicateWithJSON, ExerciseData, MultipleChoiceSchemaData, OptionShowable, OxImageInfo, ScreenTypeOx, Showable } from 'ox-types';
+import { anyElement, duplicateWithJSON, ExerciseData, MultipleChoiceSchemaData, numberArrayRange, OptionShowable, OxImageInfo, ScreenTypeOx, Showable } from 'ox-types';
 import { TdiAnswerService } from 'src/app/shared/services/tdi-answer.service';
 import { SubscriberOxDirective } from 'micro-lesson-components';
-import { Measurements, TableElement, TableGenerator } from 'src/app/shared/types/types';
+import { HintGenerator, InitState, Measurements, TableElement, TableGenerator, TdiExercise } from 'src/app/shared/types/types';
+import { filter, take, timer } from 'rxjs';
+import { TableValueComponent } from '../table-value/table-value.component';
 
 @Component({
   selector: 'app-game-body',
@@ -22,19 +24,22 @@ import { Measurements, TableElement, TableGenerator } from 'src/app/shared/types
 export class GameBodyComponent extends SubscriberOxDirective implements OnInit, AfterViewInit {
 
   @ViewChildren('cells') cells!: QueryList<ElementRef>;
-  public testTableProperties!: TableElement[];
-  public testTableValues!: TableElement[];
-  public testCompleteTable!: TableElement[];
-  public tableGenerator = new TableGenerator();
-  public rowsQuantity!: number;
-  public tableWidth!: number;
-  public cellsArray!:any;
+  @ViewChildren('tableValueComponent') tableValueComponent!: QueryList<TableValueComponent>;
+
+  public tableWidth: number = 0;
+  public cellsArray!: any;
+  public tableValueComponentArr!: any[];
+  public duplicatedTable!: TableElement[];
   public measures: Measurements = {
     width: 35,
     height: 15
   }
-
-
+  public exercise!: TdiExercise;
+  public tableClass = new TableGenerator();
+  public tableElements: TableElement[] = [];
+  public init: InitState[] = [];
+  public hint!: any;
+  public statement: string = '';
 
   constructor(private challengeService: TdiChallengeService,
     private metricsService: MicroLessonMetricsService<any>,
@@ -45,53 +50,126 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
     private feedbackService: FeedbackOxService,
     private answerService: TdiAnswerService,
   ) {
-    super()
-    this.testTableProperties = [{ value: '', elementType: 'property' }, { value: 'Sponsor', elementType: 'property' }, { value: 'Age', elementType: 'property' },{ value: 'Precio', elementType: 'property' }, { value: 'Sponsor', elementType: 'property' }, { value: 'Age', elementType: 'property' }, { value: 'Age', elementType: 'property' }, { value: 'Age', elementType: 'property' }, { value: 'Age', elementType: 'property' }, { value: 'Age', elementType: 'property' }]
-    this.testTableValues = [ { value: 'Racing', elementType: 'fixed' }, { value: 'Milito', elementType: 'empty' }, { value: '25 mll', elementType: 'fixed' }, { value: "Adidas", elementType: 'fixed' }, { value: '32', elementType: 'fixed' }, { value: '50 mll', elementType: 'fixed' }, { value: 'Nike', elementType: 'empty' },{ value: '20', elementType: 'fixed' }, { value: '20', elementType: 'fixed' }, { value: '20', elementType: 'fixed' }, { value: 'Racing', elementType: 'fixed' }, { value: 'Milito', elementType: 'fixed' }, { value: '25 mll', elementType: 'fixed' }, { value: "Adidas", elementType: 'fixed' }, { value: '32', elementType: 'fixed' }, { value: '50 mll', elementType: 'fixed' }, { value: 'Nike', elementType: 'fixed' },{ value: '20', elementType: 'fixed' }, { value: '20', elementType: 'fixed' }, { value: '20', elementType: 'fixed' }, { value: 'Racing', elementType: 'fixed' }, { value: 'Milito', elementType: 'fixed' }, { value: '25 mll', elementType: 'fixed' }, { value: "Adidas", elementType: 'fixed' }, { value: '32', elementType: 'hidden' }, { value: '50 mll', elementType: 'hidden' }, { value: 'Nike', elementType: 'fixed' },{ value: '20', elementType: 'fixed' }, { value: '20', elementType: 'fixed' }, { value: '20', elementType: 'fixed' }, { value: 'Racing', elementType: 'fixed' }, { value: 'Milito', elementType: 'fixed' }, { value: '25 mll', elementType: 'fixed' }, { value: "Adidas", elementType: 'fixed' }, { value: '32', elementType: 'fixed' }, { value: '50 mll', elementType: 'fixed' }, { value: 'Nike', elementType: 'fixed' }, { value: '20', elementType: 'fixed' }, { value: '20', elementType: 'fixed' }, { value: 'River', elementType: 'fixed' }, { value: 'Alvarez', elementType: 'fixed' }, { value: '40 mll', elementType: 'fixed' }, { value: 'Puma', elementType: 'fixed' }, { value: '22', elementType: 'fixed' }, { value: '20', elementType: 'fixed' }, { value: '50 mll', elementType: 'fixed' }, { value: 'Nike', elementType: 'fixed' }, { value: '20', elementType: 'fixed' }, { value: 'River', elementType: 'fixed' }, { value: 'Alvarez', elementType: 'fixed' }, { value: '40 mll', elementType: 'fixed' }, { value: 'Puma', elementType: 'fixed' }, { value: '22', elementType: 'fixed' }, { value: '20', elementType: 'fixed' }, { value: '50 mll', elementType: 'fixed' },{ value: 'River', elementType: 'fixed' }, { value: 'Alvarez', elementType: 'fixed' }, { value: '40 mll', elementType: 'fixed' }, { value: 'Puma', elementType: 'fixed' }, { value: '22', elementType: 'fixed' }, { value: '20', elementType: 'fixed' }, { value: '50 mll', elementType: 'fixed' },{ value: 'River', elementType: 'fixed' }, { value: 'Alvarez', elementType: 'fixed' }, { value: '40 mll', elementType: 'fixed' }, { value: 'Puma', elementType: 'fixed' }, { value: '22', elementType: 'fixed' }, { value: '20', elementType: 'fixed' }, { value: '50 mll', elementType: 'fixed' },{ value: 'River', elementType: 'fixed' }, { value: 'Alvarez', elementType: 'fixed' }, { value: '40 mll', elementType: 'fixed' }, { value: 'Puma', elementType: 'fixed' }, { value: '22', elementType: 'fixed' }, { value: '20', elementType: 'fixed' }, { value: '50 mll', elementType: 'fixed' },{ value: 'River', elementType: 'fixed' }, { value: 'Alvarez', elementType: 'fixed' }, { value: '40 mll', elementType: 'fixed' }, { value: 'Puma', elementType: 'fixed' }, { value: '22', elementType: 'fixed' }, { value: '20', elementType: 'fixed' }, { value: '50 mll', elementType: 'fixed' },{ value: 'River', elementType: 'fixed' }, { value: 'Alvarez', elementType: 'fixed' }, { value: '40 mll', elementType: 'fixed' }, { value: 'Puma', elementType: 'fixed' }, { value: '22', elementType: 'fixed' }, { value: '20', elementType: 'fixed' }, { value: '50 mll', elementType: 'fixed' }]
-    this.testCompleteTable = this.testTableProperties.concat(this.testTableValues);
-    this.rowsQuantity = this.testCompleteTable.length / this.testTableProperties.length;
-    this.tableWidth = this.testTableProperties.length > 3 ? 130 : 105;
-    const erraseEmptyValues = this.testTableValues.filter(x => x.elementType === 'empty');
-    erraseEmptyValues.forEach(val => val.value = '');
-    this.tableGenerator.tableGenerator(this.testTableValues,this.testTableProperties.length,this.rowsQuantity ,true);
-    this.sizeCalculator()
+    super();
+    this.addSubscription(this.challengeService.currentExercise.pipe(filter(x => x !== undefined)),
+      (exercise: ExerciseOx<TdiExercise>) => {
+        if (this.metricsService.currentMetrics.expandableInfo?.exercisesData.length as number > 0) {
+          return;
+        }
+        this.addMetric();
+        this.exercise = exercise.exerciseData;
+        console.log(this.exercise.table);
+        this.hint = new HintGenerator(this.exercise.table.tableElements)
+        this.tableClass.sizeCalculator(this.exercise.table.rows, this.exercise.table.columns, this.exercise.table.measures.width, this.exercise.table.measures.height, this.exercise.table.tableWidth);
+        this.tableWidth = this.exercise.table.tableWidth;
+        this.tableElements = this.exercise.table.tableElements;
+        this.statement = this.exercise.table.statement.text;
+        this.challengeService.exerciseIndex++;
+        this.exercise.table.tableElements.forEach(el => this.init.push({
+          init: false
+        }))
+
+      });
+    this.hintService.usesPerChallenge = 3;
+    this.addSubscription(this.gameActions.showHint, x => {
+      if (this.hintService.currentUses === 1) {
+        this.hint.hintModel1(this.exercise.table.setedTable, this.exercise.table.entrance);
+      } else if (this.hintService.currentUses === 2) {
+        const indexToUnblock = this.hint.hintModel2(this.exercise.table.tableElements);
+        this.tableValueComponentArray[indexToUnblock].unBloquedAnimation();
+      } else {
+        this.hint.hintModel3();
+      }
+    })
   }
 
 
 
 
   ngOnInit(): void {
-
   }
 
 
 
   ngAfterViewInit(): void {
-   
   }
 
 
-  public sizeCalculator() {
-    let adjustVariable = 0.9;
-    do {
-      this.measures.width *= adjustVariable;
-    } while (this.tableWidth < this.measures.width * this.testTableProperties.length);
-    do {
-      this.measures.height *= adjustVariable;
+
+ 
+
+
+  public tryAnswer() {
+    this.answerService.tryAnswer.emit();
+  }
+
+
+
+
+  public restoreCellsColours(id: number) {
+    const indexOfNotCorrected = this.tableElements.map((el, i) => i).filter(i => this.tableElements[i].elementType !== 'correct')
+    const oldSelected = this.tableElements.map((el, i) => i).filter(i => this.tableElements[i].isSelected && this.tableElements[i].elementType !== 'correct');
+    const indexElementsToRestore = indexOfNotCorrected.concat(oldSelected);
+    if (oldSelected !== undefined) {
+      indexElementsToRestore.forEach(i => this.tableElements[i].isSelected = false);
     }
-    while (76 < this.measures.height * this.rowsQuantity)
+    if (this.tableElements[id].id < this.exercise.table.columns && this.tableElements[id].elementType === 'property') {
+      const multipliersOfProperties = numberArrayRange(0, this.exercise.table.columns).map(x => (x * this.exercise.table.columns) + id)
+      const verticalProperties = this.tableElements.filter((prop, i) => multipliersOfProperties.includes(i));
+      verticalProperties.forEach(prop => prop.isSelected = true);
+    } else if (this.tableElements[id].elementType === 'property') {
+      for (let i = id; i < id + 10; i++) {
+        this.tableElements[i].isSelected = true;
+      }
+    }
+    this.tableElements[id].isSelected = true;
   }
 
 
-  // public sizeCalculator(rows:number, columns:number, width:number, height:number, totalWidth:number):void {
-  //   let adjustVariable = 0.9;
-  //   do {
-  //     width *= adjustVariable;
-  //   } while (totalWidth < width * columns);
-  //   do {
-  //     height *= adjustVariable;
-  //   }
-  //   while (76 < height * rows)
-  // }
+
+
+  //RECORDAR CAMBIAR
+  private addMetric(): void {
+    const myMetric: ExerciseData = {
+      schemaType: 'multiple-choice',
+      schemaData: {
+
+      } as MultipleChoiceSchemaData,
+      userInput: {
+        answers: [],
+        requestedHints: 0,
+        surrendered: false
+      },
+      finalStatus: 'to-answer',
+      maxHints: 1,
+      secondsInExercise: 0,
+      initialTime: new Date(),
+      finishTime: undefined as any,
+      firstInteractionTime: undefined as any
+    };
+    this.addSubscription(this.gameActions.actionToAnswer.pipe(take(1)), z => {
+      myMetric.firstInteractionTime = new Date();
+    });
+    this.addSubscription(this.gameActions.checkedAnswer.pipe(take(1)),
+      z => {
+        myMetric.finishTime = new Date();
+        console.log('Finish time');
+      });
+    this.metricsService.addMetric(myMetric as ExerciseData);
+  }
+
+
+
+
+
+  get tableValueComponentArray(): TableValueComponent[] {
+    return this.tableValueComponentArr ? this.tableValueComponentArr :
+      this.tableValueComponentArr = this.tableValueComponent.toArray();
+  }
+
+
+
 
 }
+
+

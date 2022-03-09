@@ -8,7 +8,7 @@ import { TdiChallengeService } from './tdi-challenge.service';
 })
 export class TdiAnswerService extends AnswerService {
   protected isValidAnswer(answer: UserAnswer): boolean {
-    throw new Error('Method not implemented.');
+    return this.currentAnswer.parts.every(part => part.parts.every(part => part.value !== ''))
   }
 
   constructor(private gameActionsService: GameActionsService<any>,

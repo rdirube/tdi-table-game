@@ -1,15 +1,41 @@
-<div fxFlex="grow" fxLayoutAlign="center center" style="position: relative; background-color: aquamarine;width: 100%; height: 100%;">
+<div fxFlex="grow" fxLayoutAlign="center center" style="position: relative; background-color: khaki;width: 100%; height: 100%;">
   <div class="myAbsolute full-width" fxLayoutAlign="center center" fxLayout="column">
-    <div>
-        <ox-text  originalText="-- TABLA --"
-        fontSize="7.5vh" color="black" font="dinnRegular"></ox-text>
+    <div fxLayoutAlign="space-between center" style="width:100%;" >
+         <mlc-to-in-game-menu-button [forceNoAnimations]="true"
+        style="width: 13vh;" svgPath="mini-lessons/executive-functions/tdi/buttons/menu.svg">
+        </mlc-to-in-game-menu-button> 
+        <div style="background-color: aquamarine; width: 80%; height:12vh" fxLayoutAlign="center center">
+          <ox-text  [originalText]="statement"
+          fontSize="3.5vh" color="black" font="dinnRegular"></ox-text> 
+        </div>        
+         <mlc-hint-button   style="width: 13vh; opacity: 1;"
+         svgPath="mini-lessons/executive-functions/tdi/buttons/pista.svg"
+        >
+      </mlc-hint-button> 
     </div>
      <div style="background-color: khaki; width: 150vh; height: 85vh;" fxLayoutAlign="center center">
-      <div [ngStyle]="{'width' : tableWidth + 'vh'}" fxLayout="row wrap" fxLayoutAlign="center center">
-       <div #cells *ngFor="let row of testCompleteTable; let t = index" fxLayoutAlign="center center"> 
-              <app-table-value [rows]="rowsQuantity" [variableWidth]="measures.width" [variableHeight]="measures.height" [tableWidth]="tableWidth"  [columns]="testTableProperties.length" [element]="testCompleteTable[t]"></app-table-value>
+      <div [ngStyle]="{'width' : tableWidth + 'vh'}" style="transform:translateY(20px)"fxLayout="row wrap" fxLayoutAlign="center center">
+       <div #cells *ngFor="let el of tableElements; let t = index" fxLayoutAlign="center center" style="border: 1px black solid"> 
+              <app-table-value #tableValueComponent (restoreCellsColours)="restoreCellsColours($event)"
+                [rows]="exercise.table.rows" 
+                [variableWidth]="exercise.table.measures.width" 
+                [variableHeight]="exercise.table.measures.height" 
+                [tableWidth]="exercise.table.tableWidth"  
+                [columns]="exercise.table.columns" 
+                [element]="exercise.table.tableElements[t]"
+                [init]="init[t]"
+              >
+              </app-table-value>
        </div>
      </div>
     </div>
+    <div style="position: relative; width: 100%;">
+    <mlc-footer class="button-menu" style=" width: 97.5%; height: 12vh;" 
+    trySvg="mini-lessons/executive-functions/tdi/buttons/check.svg" 
+    [forceNoNextButton]="true"
+    surrenderSvg="mini-lessons/executive-functions/tdi/buttons/surrender.svg" 
+    resultsSvg="mini-lessons/executive-functions/tdi/buttons/copa-memotest.svg"
+    ></mlc-footer>
+  </div>
   </div>
 </div>
