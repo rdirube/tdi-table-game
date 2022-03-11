@@ -2,6 +2,7 @@ import { FormGroup } from "@angular/forms";
 import { anyElement, numberArrayRange } from "ox-types";
 
 export type ElementType = 'property' | 'fixed' | 'empty' | 'hidden' | 'hidden-hint' | 'null' | 'correct';
+export type HintType = 'Iluminación encabezado'| 'Iluminación de ejes'| 'Desbloquear tapados';
 
 
 
@@ -11,8 +12,14 @@ export interface Measurements {
 }
 
 
+export interface AnswerType {
+  answer:string,
+  empty:boolean
+}
+
 export interface TdiNivelation {
   tables:Table[];
+  advancedSettings:HintType[];
 }
 
 export interface TdiExercise {
@@ -68,7 +75,6 @@ export class TableGenerator {
     } else if (entrance === 'Entrada simple') {
       
     }
-    //  rowValues.forEach(el => el.isProperty = true);
   }
   
 
@@ -87,6 +93,8 @@ export class TableGenerator {
 
 
 
+
+
 export class HintGenerator {
 
  private tableElements!:TableElement[];
@@ -97,42 +105,54 @@ export class HintGenerator {
 
 
 
-
-
-public hintModel2():number {
+public hintModel3():number {
   const hiddenElements = this.tableElements.map((el,i) => i).filter(i => this.tableElements[i].elementType === 'hidden');
    return anyElement(hiddenElements);
 }
 
 
 
-
-public hintModel3(){
-  const listOfFixedNotAnswer = this.tableElements.filter(el => el.elementType === 'fixed' && !el.isAnswer);
-  const elToBlock = anyElement(listOfFixedNotAnswer);
-  elToBlock.elementType = 'hidden-hint';
+public hintModel1and2(hint1:boolean, entrance:string, tableSet:string) {
+  const answerElements = this.tableElements.map((el,i) => i).filter(i => this.tableElements[i].isAnswer && this.tableElements[i].elementType !== 'correct');
+  const answerSelectedIndex = anyElement(answerElements);
+  const elementSelected = this.tableElements[answerSelectedIndex];
+  hint1 ? this.hintModel1(entrance, elementSelected) : this.hintModel2(tableSet,entrance, answerSelectedIndex, elementSelected)
 }
 
 
 
 
-public hintModel1(tableSet:string, entrance:string) {
-  const answerElements = this.tableElements.map((el,i) => i).filter(i => this.tableElements[i].isAnswer && this.tableElements[i].elementType !== 'correct');
-  const answerSelectedIndex = anyElement(answerElements);
-  const elementSelected = this.tableElements[answerSelectedIndex];
-  if(tableSet === 'Calendario') {
-     this.tableElements[answerSelectedIndex + 1].isSelected = true;
-     this.tableElements[answerSelectedIndex - 1].isSelected = true;
-  } else if(entrance === 'Doble entrada') {
+public hintModel1(entrance:string, elementSelected:TableElement) {
+  if(entrance === 'Doble entrada') {
     const firstColSameRowEl = this.tableElements.find(el => el.n === elementSelected.n && el.m === 0);
     const sameColFirstRowEl = this.tableElements.find(el => el.m === elementSelected.m && el.n === 0);
     (sameColFirstRowEl as TableElement).isSelected = true;
     (firstColSameRowEl as TableElement).isSelected = true;
   } else if(entrance === 'Entrada simple') {
-    const answerColumn = this.tableElements.filter(el => elementSelected.n === el.n);
-    answerColumn.forEach(el => el.isSelected = true);
+    const sameColFirstRowEl = this.tableElements.find(el => el.m === elementSelected.m && el.n === 0);
+    (sameColFirstRowEl as TableElement).isSelected = true;
   }
+}
+
+
+
+
+
+public hintModel2(tableSet:string, entrance:string, answerSelectedIndex:number, elementSelected:TableElement) {
+  if(tableSet === 'Calendario') {
+    this.tableElements[answerSelectedIndex + 1].isSelected = true;
+    this.tableElements[answerSelectedIndex - 1].isSelected = true;
+} else if(entrance === 'Doble entrada') {
+    const elementCol = this.tableElements.filter(el => el.m === elementSelected.m);
+    const elementRow = this.tableElements.filter(el => el.n === elementSelected.n);
+    elementCol.forEach(el => el.isSelected = true);
+    elementRow.forEach(el => el.isSelected = true);
+} else if(entrance === 'Entrada simple') {
+  const uniqueCol = this.tableElements.filter(el => el.m === elementSelected.m);
+  uniqueCol.forEach(col => col.isSelected = true);
+}
 
 }
+
 
 }

@@ -1,5 +1,5 @@
 import { Component, ElementRef, Input, OnInit, ViewChild, AfterViewInit, EventEmitter, Output, AfterViewChecked } from '@angular/core';
-import { InitState, TableElement } from 'src/app/shared/types/types';
+import { AnswerType, InitState, TableElement } from 'src/app/shared/types/types';
 import { TdiChallengeService } from 'src/app/shared/services/tdi-challenge.service';
 import { TdiAnswerService } from 'src/app/shared/services/tdi-answer.service';
 import { GameActionsService, HintService } from 'micro-lesson-core';
@@ -7,6 +7,8 @@ import { empty } from 'rxjs';
 import { CorrectablePart, isEven, PartCorrectness, PartFormat } from 'ox-types';
 import { SubscriberOxDirective } from 'micro-lesson-components';
 import anime from 'animejs'
+import { FeedbackOxService } from 'micro-lesson-core';
+
 
 @Component({
   selector: 'app-table-value',
@@ -32,13 +34,14 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
   @Input() variableHeight!: number;
   @Input() variableWidth!:number; 
   @Input() init!:InitState;
-  public answer!:any;
+  @Input() answer!:AnswerType;
 
 
   constructor(public elementRef: ElementRef, public challengeService:TdiChallengeService,
     private hintService: HintService,
     private gameActions: GameActionsService<any>,
-    public answerService: TdiAnswerService) {
+    public answerService: TdiAnswerService,
+    private feedbackService: FeedbackOxService) {
       super()
       this.addSubscription(this.gameActions.checkedAnswer, x => {
         if(this.element.isSelected) {
@@ -72,9 +75,10 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
  private setAnswer() {
   if(this.element.isAnswer) {
-    this.answer = this.element.value.text;
+    this.answer.answer = this.element.value.text;
   }
   if(this.element.elementType === 'empty') {
+    this.answer.empty = true;
     this.element.value.text = '';
   }
  }
@@ -116,13 +120,13 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
   public answerCorrection () {
-    if(this.answer === this.wordInput.nativeElement.value) {
+    if(this.answer.answer === this.wordInput.nativeElement.value) {
       this.correctAnswerAnimation();
       this.element.elementType = 'correct';
-      console.log(this.element.elementType)
     } else {
       this.wrongAnswerAnimation();
     }
+    this.feedbackService.endFeedback.emit()
   }
 
 
@@ -142,7 +146,7 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
   public tableElementCorrectablePart(): void {
     const correctablePart = 
        [{
-        correctness: (this.answer === this.wordInput.nativeElement.value ? 'correct' : 'wrong') as PartCorrectness,
+        correctness: (this.answer.answer === this.wordInput.nativeElement.value ? 'correct' : 'wrong') as PartCorrectness,
         parts: [
           {
             format: 'word-text' as PartFormat,
@@ -163,7 +167,9 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
     anime({
       targets: this.elementContainer.nativeElement,
       backgroundColor: '#0FFF50',
-      duration: 500
+      duration: 500,
+      complete:() => {
+      }
     })
   }
 
