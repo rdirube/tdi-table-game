@@ -23,7 +23,8 @@ export interface TdiNivelation {
 }
 
 export interface TdiExercise {
-  table:Table
+  table:Table,
+  hints:HintType[]
 }
 
 export interface TextWithAudio {

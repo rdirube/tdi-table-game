@@ -15,6 +15,7 @@ import { SubscriberOxDirective } from 'micro-lesson-components';
 import { AnswerType, HintGenerator, InitState, Measurements, TableElement, TableGenerator, TdiExercise } from 'src/app/shared/types/types';
 import { filter, take, timer } from 'rxjs';
 import { TableValueComponent } from '../table-value/table-value.component';
+import { ThisReceiver } from '@angular/compiler';
 
 @Component({
   selector: 'app-game-body',
@@ -43,7 +44,11 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
   public pxToVHVar = 100/window.innerHeight;
   private emptyElements: TableElement[] = [];
   public answerArray:AnswerType[] = [];
-
+  public selectionActivate:{
+    state:boolean
+  } = {
+    state:true
+  }
 
   constructor(private challengeService: TdiChallengeService,
     private metricsService: MicroLessonMetricsService<any>,
@@ -62,7 +67,6 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
         }
         this.addMetric();
         this.exercise = exercise.exerciseData;
-        console.log(this.exercise);
         this.exercise.table.tableElements.forEach(el => this.answerArray.push({
           answer:'',
           empty:false,
@@ -76,10 +80,10 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
           init: false
         }))
         this.hintService.usesPerChallenge = this.challengeService.exerciseConfig.advancedSettings.length;
-
       });
     this.addSubscription(this.gameActions.showHint, x => {
       const avaiableHints = this.challengeService.exerciseConfig.advancedSettings;
+      this.restoreCellsColour();  
       if(avaiableHints.find(hint => hint === 'Iluminación encabezado')) {
         this.hint.hintModel1and2(true , this.exercise.table.entrance, this.exercise.table.setedTable);
       } else if(avaiableHints.find(hint => hint === 'Iluminación de ejes')) {
@@ -90,19 +94,13 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
       }
       avaiableHints.shift();
     })
-
     this.addSubscription(this.gameActions.surrender, surr => {
       this.surrender();
     })
-    // this.addSubscription(this.feedbackService.endFeedback, params => {
-    //   if (this.answerService.currentAnswer.parts.every(part => part.correctness === 'correct')) {
-    //     console.log('Sending show next challange')
-    //     timer(100).subscribe(z => {
-    //       if (!endService.gameIsEnded())
-    //         this.gameActions.showNextChallenge.emit();
-    //     });
-    //   }
-    // });
+    this.addSubscription(this.feedbackService.endFeedback, x => {
+      if (!endService.gameIsEnded())
+      this.gameActions.showNextChallenge.emit();
+    })
   }
 
 
@@ -127,23 +125,26 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
 
-  public restoreCellsColours(id: number) {
-    const indexOfNotCorrected = this.tableElements.map((el, i) => i).filter(i => this.tableElements[i].elementType !== 'correct')
-    const oldSelected = this.tableElements.map((el, i) => i).filter(i => this.tableElements[i].isSelected && this.tableElements[i].elementType !== 'correct');
-    const indexElementsToRestore = indexOfNotCorrected.concat(oldSelected);
-    if (oldSelected !== undefined) {
-      indexElementsToRestore.forEach(i => this.tableElements[i].isSelected = false);
+  public restoreCellsColoursAndSelect(id: number) {
+    this.restoreCellsColour();
+    const typesAllowToSelect = this.tableElements[id].elementType === 'empty' || this.tableElements[id].elementType === 'fixed';
+    if(typesAllowToSelect && this.selectionActivate.state) {
+      this.tableElements[id].isSelected = true;
+      console.log(this.tableElements[id].isSelected)
+
     }
-    if (this.tableElements[id].id < this.exercise.table.columns && this.tableElements[id].elementType === 'property') {
-      const multipliersOfProperties = numberArrayRange(0, this.exercise.table.columns).map(x => (x * this.exercise.table.columns) + id)
-      const verticalProperties = this.tableElements.filter((prop, i) => multipliersOfProperties.includes(i));
-      verticalProperties.forEach(prop => prop.isSelected = true);
-    } else if (this.tableElements[id].elementType === 'property') {
-      for (let i = id; i < id + 10; i++) {
-        this.tableElements[i].isSelected = true;
-      }
-    }
-    this.tableElements[id].isSelected = true;
+  }
+
+
+
+  
+ private restoreCellsColour():void {
+  const indexOfNotCorrected = this.tableElements.map((el, i) => i).filter(i => this.tableElements[i].elementType !== 'correct')
+  const oldSelected = this.tableElements.map((el, i) => i).filter(i => this.tableElements[i].isSelected && this.tableElements[i].elementType !== 'correct');
+  const indexElementsToRestore = indexOfNotCorrected.concat(oldSelected);
+  if (oldSelected !== undefined) {
+    indexElementsToRestore.forEach(i => this.tableElements[i].isSelected = false);
+  }
   }
 
 
@@ -173,11 +174,13 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
     });
     this.addSubscription(this.gameActions.checkedAnswer.pipe(take(this.answerArray.filter(ans => ans.answer !== '').length)),
       z => {
+        console.log(this.answerArray.filter(ans => ans.answer !== '').length)
         myMetric.finishTime = new Date();
         console.log('Finish time');
       });
     this.metricsService.addMetric(myMetric as ExerciseData);
   }
+
 
 
   private surrender():void {
@@ -186,7 +189,9 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
    const answerArrayEmpty = this.answerArray.filter(ans => ans.answer !== '' && ans.empty);
    const emptyElements = this.tableElements.filter(el => el.elementType === "empty");
    emptyElements.forEach((el,i) => el.value.text = answerArrayEmpty[i].answer);
-   this.feedbackService.surrenderEnd.emit()
+   this.selectionActivate.state = false;
+   this.restoreCellsColour();
+   this.feedbackService.surrenderEnd.emit();
   }
 
 

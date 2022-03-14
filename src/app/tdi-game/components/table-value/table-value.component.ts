@@ -35,6 +35,10 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
   @Input() variableWidth!:number; 
   @Input() init!:InitState;
   @Input() answer!:AnswerType;
+  @Input() selectionActivate!:{
+    state:boolean
+  };
+
 
 
   constructor(public elementRef: ElementRef, public challengeService:TdiChallengeService,
@@ -90,8 +94,9 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
     if(this.element.elementType !== 'hidden') {
       if(this.element.elementType === 'empty' ) {
         this.wordInput.nativeElement.focus();
+      } else {
+        this.tableElementCorrectablePart();
       }
-      this.tableElementCorrectablePart();
       this.restoreCellsColours.emit(this.element.id - 1);
       this.hintService.checkHintAvailable();
     }
@@ -122,11 +127,10 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
   public answerCorrection () {
     if(this.answer.answer === this.wordInput.nativeElement.value) {
       this.correctAnswerAnimation();
-      this.element.elementType = 'correct';
     } else {
       this.wrongAnswerAnimation();
     }
-    this.feedbackService.endFeedback.emit()
+   this.feedbackService.endFeedback.emit()
   }
 
 
@@ -157,6 +161,7 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
     this.answerService.currentAnswer = {
       parts: correctablePart as CorrectablePart[]
     }
+    console.log(this.answerService.currentAnswer);
     this.isAnswerReady();
   }
 
@@ -164,10 +169,24 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
   correctAnswerAnimation() {
+    this.element.elementType = 'correct';
+    this.element.isSelected = false;
     anime({
       targets: this.elementContainer.nativeElement,
-      backgroundColor: '#0FFF50',
-      duration: 500,
+      backgroundColor:'#0FFF50',
+      keyframes:[
+        {
+          filter: 'brightness(80%)',
+        },
+      {
+        filter:  'brightness(120%)',
+      },
+      {
+        filter: '#brightness(100%)',
+      }
+      ],
+      duration: 1200,
+      easing: 'linear',
       complete:() => {
       }
     })
@@ -176,6 +195,9 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
   wrongAnswerAnimation() {
       anime({
+        begin: () => {
+           this.selectionActivate.state = false;
+        } ,
         targets: this.elementContainer.nativeElement,
         duration: 550,
         loop:2,
@@ -183,7 +205,10 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
         keyframes: [{
           backgroundColor: '#FF2D00'
         }],
-        easing: 'linear'    
+        easing: 'linear',
+        complete: () => {
+          this.selectionActivate.state = true;
+        }    
   })
 }
 
