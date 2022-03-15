@@ -13,17 +13,16 @@ export class TdiChallengeService extends ChallengeService<TdiExercise, any>{
   
 
   public exerciseConfig!: TdiNivelation;
-  public exerciseIndex:number = 0;
+  public tablesIndex:number = 0;
 
 
   inputModified = new EventEmitter();
  
 
   protected generateNextChallenge(subLevel: number): ExerciseOx<TdiExercise> {
-    console.log(this.exerciseConfig.tables[this.exerciseIndex]);
     return new ExerciseOx(
       duplicateWithJSON({
-        table: this.exerciseConfig.tables[this.exerciseIndex],
+        table: this.exerciseConfig.tables,
         hints:this.exerciseConfig.advancedSettings
 
       }) as TdiExercise, 1, {

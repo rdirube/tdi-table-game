@@ -12,7 +12,7 @@ import { ExerciseOx } from 'ox-core';
 import { anyElement, duplicateWithJSON, ExerciseData, MultipleChoiceSchemaData, numberArrayRange, OptionShowable, OxImageInfo, ScreenTypeOx, Showable } from 'ox-types';
 import { TdiAnswerService } from 'src/app/shared/services/tdi-answer.service';
 import { SubscriberOxDirective } from 'micro-lesson-components';
-import { AnswerType, HintGenerator, InitState, Measurements, TableElement, TableGenerator, TdiExercise } from 'src/app/shared/types/types';
+import { AnswerType, HintGenerator, InitState, Measurements, Table, TableElement, TableGenerator, TdiExercise } from 'src/app/shared/types/types';
 import { filter, take, timer } from 'rxjs';
 import { TableValueComponent } from '../table-value/table-value.component';
 import { ThisReceiver } from '@angular/compiler';
@@ -49,6 +49,10 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
   } = {
     state:true
   }
+  public tableExerciseQuantity!:number;
+  private newExercise!:boolean; 
+  public currentExercise!:Table;
+
 
   constructor(private challengeService: TdiChallengeService,
     private metricsService: MicroLessonMetricsService<any>,
@@ -60,23 +64,36 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
     private answerService: TdiAnswerService,
   ) {
     super();
+    this.newExercise = true;
     this.addSubscription(this.challengeService.currentExercise.pipe(filter(x => x !== undefined)),
       (exercise: ExerciseOx<TdiExercise>) => {
-        if (this.metricsService.currentMetrics.expandableInfo?.exercisesData.length as number > 0) {
+        this.selectionActivate.state = true;
+        const tableExerciseQuantity = this.exercise ? this.currentExercise.tableElements.filter(el => el.isAnswer).length : 10;
+        const correctAnswers = this.exercise ? this.currentExercise.tableElements.filter(el => el.elementType === 'correct').length : 0;
+        if(tableExerciseQuantity <= correctAnswers) {
+          this.challengeService.tablesIndex++;
+          this.newExercise = true;
+          this.selectionActivate.state = false;   
+        } 
+        if (this.metricsService.currentMetrics.expandableInfo?.exercisesData.length as number > 0 && !this.newExercise) {
           return;
         }
         this.addMetric();
         this.exercise = exercise.exerciseData;
-        this.exercise.table.tableElements.forEach(el => this.answerArray.push({
+        this.currentExercise = this.exercise.table[this.challengeService.tablesIndex];
+        console.log(this.currentExercise);
+        this.newExercise = false;
+        this.currentExercise.tableElements.forEach(el => this.answerArray.push({
           answer:'',
           empty:false,
         }))
-        this.hint = new HintGenerator(this.exercise.table.tableElements);
-        this.tableClass.sizeCalculator(this.exercise.table.rows, this.exercise.table.columns, this.exercise.table.measures.width, this.exercise.table.measures.height, this.exercise.table.tableWidth);
-        this.tableWidth = this.exercise.table.tableWidth;
-        this.tableElements = this.exercise.table.tableElements;
-        this.statement = this.exercise.table.statement.text;
-        this.exercise.table.tableElements.forEach(el => this.init.push({
+        this.selectionActivate.state = true;
+        this.hint = new HintGenerator(this.currentExercise.tableElements);
+        this.tableClass.sizeCalculator(this.currentExercise.rows, this.currentExercise.columns, this.currentExercise.measures.width, this.currentExercise.measures.height, this.currentExercise.tableWidth);
+        this.tableWidth = this.currentExercise.tableWidth;
+        this.tableElements = this.currentExercise.tableElements;
+        this.statement = this.currentExercise.statement.text;
+        this.currentExercise.tableElements.forEach(el => this.init.push({
           init: false
         }))
         this.hintService.usesPerChallenge = this.challengeService.exerciseConfig.advancedSettings.length;
@@ -85,21 +102,17 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
       const avaiableHints = this.challengeService.exerciseConfig.advancedSettings;
       this.restoreCellsColour();  
       if(avaiableHints.find(hint => hint === 'Iluminación encabezado')) {
-        this.hint.hintModel1and2(true , this.exercise.table.entrance, this.exercise.table.setedTable);
+        this.hint.hintModel1and2(true , this.currentExercise.entrance, this.currentExercise.setedTable);
       } else if(avaiableHints.find(hint => hint === 'Iluminación de ejes')) {
-        this.hint.hintModel1and2(false , this.exercise.table.entrance, this.exercise.table.setedTable);
-      } else if(avaiableHints.find(hint => hint === 'Desbloquear tapados') && this.exercise.table.tableElements.find(el => el.elementType === 'hidden')) {
-         const indexToUnblock = this.hint.hintModel3(this.exercise.table.tableElements);
+        this.hint.hintModel1and2(false , this.currentExercise.entrance, this.currentExercise.setedTable);
+      } else if(avaiableHints.find(hint => hint === 'Desbloquear tapados') && this.currentExercise.tableElements.find(el => el.elementType === 'hidden')) {
+         const indexToUnblock = this.hint.hintModel3(this.currentExercise.tableElements);
          this.tableValueComponentArray[indexToUnblock].unBloquedAnimation();
       }
       avaiableHints.shift();
     })
     this.addSubscription(this.gameActions.surrender, surr => {
       this.surrender();
-    })
-    this.addSubscription(this.feedbackService.endFeedback, x => {
-      if (!endService.gameIsEnded())
-      this.gameActions.showNextChallenge.emit();
     })
   }
 
@@ -184,7 +197,7 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
   private surrender():void {
-   const answersId = this.exercise.table.tableElements.filter(el => el.isAnswer).map(el => el.id);
+   const answersId = this.currentExercise.tableElements.filter(el => el.isAnswer).map(el => el.id);
    answersId.forEach(id => this.tableValueComponentArray[id - 1].correctAnswerAnimation());
    const answerArrayEmpty = this.answerArray.filter(ans => ans.answer !== '' && ans.empty);
    const emptyElements = this.tableElements.filter(el => el.elementType === "empty");

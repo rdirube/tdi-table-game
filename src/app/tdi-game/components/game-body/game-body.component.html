@@ -16,17 +16,17 @@
     <div style="background-color: aquamarine; width: 150vh; height: 85vh;" fxLayoutAlign="center center">
       <div *ngIf="exercise" [ngStyle]="{'width' : tableWidth + 'vh'}" fxLayout="row wrap" fxLayoutAlign="center center">
         <div style="background-color: #f4e8a4; height:7.5vh;border:1px solid black; border-bottom: 0.5px;"
-          [ngStyle]="{'width' : exercise.table.measures.width * exercise.table.columns + (pxToVHVar * 2 * exercise.table.columns)+ 'vh'}"
-          fxLayoutAlign="center center" *ngIf="exercise.table.tableName.text !== ''" fxLayoutAlign="center center">
-          <ox-text #wordOxText [originalText]="exercise.table.tableName.text" style="width: 100%;" fontSize="3.1vh"
+          [ngStyle]="{'width' : currentExercise.measures.width * currentExercise.columns + (pxToVHVar * 2 * currentExercise.columns)+ 'vh'}"
+          fxLayoutAlign="center center" *ngIf="currentExercise.tableName.text !== ''" fxLayoutAlign="center center">
+          <ox-text #wordOxText [originalText]="currentExercise.tableName.text" style="width: 100%;" fontSize="3.1vh"
             color="black" font="dinnRegular"></ox-text>
         </div>
         <div #cells *ngFor="let el of tableElements; let t = index" fxLayoutAlign="center center"
           style="border: 1px black solid">
           <app-table-value #tableValueComponent (restoreCellsColours)="restoreCellsColoursAndSelect($event)"
-            [rows]="exercise.table.rows" [variableWidth]="exercise.table.measures.width"
-            [variableHeight]="exercise.table.measures.height" [tableWidth]="exercise.table.tableWidth"
-            [columns]="exercise.table.columns" [element]="exercise.table.tableElements[t]" [init]="init[t]"
+            [rows]="currentExercise.rows" [variableWidth]="currentExercise.measures.width"
+            [variableHeight]="currentExercise.measures.height" [tableWidth]="currentExercise.tableWidth"
+            [columns]="currentExercise.columns" [element]="currentExercise.tableElements[t]" [init]="init[t]"
             [answer]="answerArray[t]" [selectionActivate]="selectionActivate">
           </app-table-value>
         </div>
@@ -34,7 +34,7 @@
     </div>
     <div style="position: relative; width: 100%;">
       <mlc-footer class="button-menu" style=" width: 97.5%; height: 12vh;"
-        trySvg="mini-lessons/executive-functions/tdi/buttons/check.svg" [forceNoNextButton]="true"
+        trySvg="mini-lessons/executive-functions/tdi/buttons/check.svg" 
         surrenderSvg="mini-lessons/executive-functions/tdi/buttons/surrender.svg"
         resultsSvg="mini-lessons/executive-functions/tdi/buttons/copa-memotest.svg"
         nextSvg="mini-lessons/executive-functions/tdi/buttons/next-memotest.svg"></mlc-footer>

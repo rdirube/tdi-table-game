@@ -19,5 +19,20 @@ export class TdiAnswerService extends AnswerService {
     m: MicroLessonMetricsService<any>,
     private challenge: TdiChallengeService) {
       super(gameActionsService, m)
+
+
+      this.gameActionsService.showNextChallenge.subscribe(value => {
+        this.cleanAnswer();
+      });
+      this.gameActionsService.finishedTimeOfExercise.subscribe(() => {
+        console.log('finishedTimeOfExercise');
+        this.onTryAnswer();
+      });
     }
+
+
+    public cleanAnswer(): void {
+      this.currentAnswer = { parts: [] };
+    }
+
 }

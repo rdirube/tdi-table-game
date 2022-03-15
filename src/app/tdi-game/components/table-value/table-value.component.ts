@@ -60,7 +60,6 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
   ngOnInit(): void {
     this.parsedTypes(this.element.elementType, this.element);
     this.setAnswer();
-
   }
 
 
@@ -72,8 +71,9 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
   ngAfterViewChecked(): void {
-    
   }
+
+
 
 
 
@@ -90,6 +90,7 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
 
+
   focusCell() {
     if(this.element.elementType !== 'hidden') {
       if(this.element.elementType === 'empty' ) {
@@ -101,6 +102,8 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
       this.hintService.checkHintAvailable();
     }
   }
+
+
 
 
 
@@ -124,14 +127,18 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
   
 
 
+
+
   public answerCorrection () {
     if(this.answer.answer === this.wordInput.nativeElement.value) {
       this.correctAnswerAnimation();
     } else {
       this.wrongAnswerAnimation();
     }
-   this.feedbackService.endFeedback.emit()
+   this.feedbackService.endFeedback.emit();
   }
+
+
 
 
 
@@ -147,7 +154,10 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
 
+
+
   public tableElementCorrectablePart(): void {
+     
     const correctablePart = 
        [{
         correctness: (this.answer.answer === this.wordInput.nativeElement.value ? 'correct' : 'wrong') as PartCorrectness,
@@ -168,18 +178,21 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
 
+
+
   correctAnswerAnimation() {
     this.element.elementType = 'correct';
     this.element.isSelected = false;
+    this.selectionActivate.state = false;
     anime({
       targets: this.elementContainer.nativeElement,
       backgroundColor:'#0FFF50',
       keyframes:[
         {
-          filter: 'brightness(80%)',
+          filter: 'brightness(90%)',
         },
       {
-        filter:  'brightness(120%)',
+        filter:  'brightness(110%)',
       },
       {
         filter: '#brightness(100%)',
@@ -187,17 +200,16 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
       ],
       duration: 1200,
       easing: 'linear',
-      complete:() => {
-      }
     })
   }
 
 
+
+
+
   wrongAnswerAnimation() {
+    this.selectionActivate.state = false;
       anime({
-        begin: () => {
-           this.selectionActivate.state = false;
-        } ,
         targets: this.elementContainer.nativeElement,
         duration: 550,
         loop:2,
@@ -208,9 +220,12 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
         easing: 'linear',
         complete: () => {
           this.selectionActivate.state = true;
+          this.restoreCellsColours.emit(this.element.id - 1);
         }    
   })
 }
+
+
 
 
 public unBloquedAnimation() {
@@ -225,17 +240,6 @@ public unBloquedAnimation() {
 })
 }
 
-public bloquedAnimation() {
-  anime({
-    begin: () => {
-      this.element.elementType === 'hidden-hint'
-    },
-    targets: this.blockedDiv.nativeElement,
-    duration: 550,
-    opacity: [1,0] ,
-    easing: 'linear',    
-})
-}
 
 
 }
