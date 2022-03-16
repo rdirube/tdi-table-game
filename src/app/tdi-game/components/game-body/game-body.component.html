@@ -1,11 +1,14 @@
 <div fxFlex="grow" fxLayoutAlign="center center"
-  style="position: relative; background-color:aquamarine;width: 100%; height: 100%;">
+  style="position: relative;width: 100%; height: 100%;">
   <div class="myAbsolute full-width" fxLayoutAlign="center center" fxLayout="column">
+    <mlc-loaded-svg fxFlex="grow" style="z-index: -1;" class="myAbsolute" forceViewBoxTo="''"
+    path="mini-lessons/executive-functions/tdi/game/background.svg">
+  </mlc-loaded-svg>
     <div fxLayoutAlign="space-between center" style="width:100%;">
       <mlc-to-in-game-menu-button [forceNoAnimations]="true" style="width: 13vh;"
         svgPath="mini-lessons/executive-functions/tdi/buttons/menu.svg">
       </mlc-to-in-game-menu-button>
-      <div style="background-color: aquamarine; width: 80%; height:12vh" fxLayoutAlign="center center">
+      <div style="width: 77%; height:12vh; border-radius: 20px; background-color: #EF8275; transform: translateY(1vh); border: 5px dotted black" fxLayoutAlign="center center">
         <ox-text [originalText]="statement" style="width: 95%;" fontSize="3.1vh" color="black" font="dinnRegular">
         </ox-text>
       </div>
@@ -13,8 +16,10 @@
         svgPath="mini-lessons/executive-functions/tdi/buttons/pista.svg">
       </mlc-hint-button>
     </div>
-    <div style="background-color: aquamarine; width: 150vh; height: 85vh;" fxLayoutAlign="center center">
-      <div *ngIf="exercise" [ngStyle]="{'width' : tableWidth + 'vh'}" fxLayout="row wrap" fxLayoutAlign="center center">
+   
+    <div style="width: 150vh; height: 85vh;" fxLayoutAlign="center center">
+       
+      <div *ngIf="exercise" style="transform: translateY(1vh);" [ngStyle]="{'width' : tableWidth + 'vh'}" fxLayout="row wrap" fxLayoutAlign="center center">
         <div style="background-color: #f4e8a4; height:7.5vh;border:1px solid black; border-bottom: 0.5px;"
           [ngStyle]="{'width' : currentExercise.measures.width * currentExercise.columns + (pxToVHVar * 2 * currentExercise.columns)+ 'vh'}"
           fxLayoutAlign="center center" *ngIf="currentExercise.tableName.text !== ''" fxLayoutAlign="center center">

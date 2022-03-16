@@ -13,6 +13,7 @@ export interface Measurements {
 
 
 export interface AnswerType {
+  id:number,
   answer:string,
   empty:boolean
 }
@@ -99,6 +100,7 @@ export class TableGenerator {
 export class HintGenerator {
 
  private tableElements!:TableElement[];
+ private correctAnswers!:number[];
 
   constructor(tableElements:TableElement[]) {
     this.tableElements = tableElements;
@@ -115,9 +117,9 @@ public hintModel3():number {
 
 public hintModel1and2(hint1:boolean, entrance:string, tableSet:string) {
   const answerElements = this.tableElements.map((el,i) => i).filter(i => this.tableElements[i].isAnswer && this.tableElements[i].elementType !== 'correct');
-  const answerSelectedIndex = anyElement(answerElements);
-  const elementSelected = this.tableElements[answerSelectedIndex];
-  hint1 ? this.hintModel1(entrance, elementSelected) : this.hintModel2(tableSet,entrance, answerSelectedIndex, elementSelected)
+  const currentAns = this.tableElements.map(elem => (elem.id - 1)).find(t => this.tableElements[t].elementType !== 'correct' && this.tableElements[t].isAnswer);
+  const elementSelected = this.tableElements[currentAns as number];
+  hint1 ? this.hintModel1(entrance, elementSelected) : this.hintModel2(tableSet,entrance, currentAns as number, elementSelected)
 }
 
 

@@ -50,7 +50,7 @@ protected getGameResourcesToLoad(): ResourceOx[] {
 
   const svgElementos: string[] = ['check.svg', 'copa-memotest.svg', 'next-memotest.svg', 'surrender.svg', 'menu.svg', 'pista.svg', 'sonido-activado.svg'];
   
-  const gameResources: string[] = ['locker.svg']
+  const gameResources: string[] = ['locker.svg', 'background.svg']
 
   const sounds:string[] = ['click.mp3', 'bubble01.mp3', 'bubble02.mp3', 'rightAnswer.mp3', 'woosh.mp3', 'wrongAnswer.mp3', 'clickSurrender.mp3', 'cantClick.mp3',  'hint.mp3'].map(z => 'sounds/' + z);
 
