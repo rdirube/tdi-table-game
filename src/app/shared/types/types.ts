@@ -127,8 +127,8 @@ public hintModel1and2(hint1:boolean, entrance:string, tableSet:string) {
 
 public hintModel1(entrance:string, elementSelected:TableElement) {
   if(entrance === 'Doble entrada') {
-    const firstColSameRowEl = this.tableElements.find(el => el.n === elementSelected.n && el.m === 0);
-    const sameColFirstRowEl = this.tableElements.find(el => el.m === elementSelected.m && el.n === 0);
+    const firstColSameRowEl = this.tableElements.find(el => el.n === elementSelected.n );
+    const sameColFirstRowEl = this.tableElements.find(el => el.m === elementSelected.m );
     (sameColFirstRowEl as TableElement).isSelected = true;
     (firstColSameRowEl as TableElement).isSelected = true;
   } else if(entrance === 'Entrada simple') {
@@ -146,8 +146,9 @@ public hintModel2(tableSet:string, entrance:string, answerSelectedIndex:number, 
     this.tableElements[answerSelectedIndex + 1].isSelected = true;
     this.tableElements[answerSelectedIndex - 1].isSelected = true;
 } else if(entrance === 'Doble entrada') {
-    const elementCol = this.tableElements.filter(el => el.m === elementSelected.m);
-    const elementRow = this.tableElements.filter(el => el.n === elementSelected.n);
+    const elementCol = this.tableElements.filter(el => el.m === elementSelected.m && el.n > 0);
+    const elementRow = this.tableElements.filter(el => el.n === elementSelected.n && el.m > 0);
+    console.log(elementCol, elementRow)
     elementCol.forEach(el => el.isSelected = true);
     elementRow.forEach(el => el.isSelected = true);
 } else if(entrance === 'Entrada simple') {

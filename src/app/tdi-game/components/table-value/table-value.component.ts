@@ -92,8 +92,8 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
   focusCell() {
-    if(this.element.elementType !== 'hidden') {
-      if(this.element.elementType === 'empty' ) {
+    if(this.element.elementType !== 'hidden' && this.selectionActivate.state) {
+      if(this.element.elementType === 'empty') {
         this.wordInput.nativeElement.focus();
       } else {
         this.tableElementCorrectablePart();
