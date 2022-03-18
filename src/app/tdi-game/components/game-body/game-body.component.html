@@ -9,8 +9,11 @@
         svgPath="mini-lessons/executive-functions/tdi/buttons/menu.svg">
       </mlc-to-in-game-menu-button>
       <div style="width: 77%; height:12vh; border-radius: 20px; background-color: #EF8275; transform: translateY(1vh); border: 5px dotted black" fxLayoutAlign="center center">
-        <ox-text [originalText]="statement" style="width: 95%;" fontSize="3.1vh" color="black" font="dinnRegular">
+        <ox-text [originalText]="statement.text"   fontSize="3.1vh" color="black" font="dinnRegular">
         </ox-text>
+        <mlc-sound-button  svgPath="mini-lessons/executive-functions/tdi/buttons/sonido-activado.svg" *ngIf="statement.audio"
+    style="width: 6.5vh;transform: translate(2vh, -0.5vh);cursor: pointer; " (click)="playLoadedSound(currentExercise.statement.audio)">
+    </mlc-sound-button>
       </div>
       <mlc-hint-button style="width: 13vh; opacity: 1;"
         svgPath="mini-lessons/executive-functions/tdi/buttons/pista.svg">
@@ -23,8 +26,11 @@
         <div style="background-color: #f4e8a4; height:7.5vh;border:1px solid black; border-bottom: 0.5px;"
           [ngStyle]="{'width' : currentExercise.measures.width * currentExercise.columns + (pxToVHVar * 2 * currentExercise.columns)+ 'vh'}"
           fxLayoutAlign="center center" *ngIf="currentExercise.tableName.text !== ''" fxLayoutAlign="center center">
-          <ox-text #wordOxText [originalText]="currentExercise.tableName.text" style="width: 100%;" fontSize="3.1vh"
+          <ox-text #wordOxText [originalText]="currentExercise.tableName.text"  fontSize="3.1vh"
             color="black" font="dinnRegular"></ox-text>
+            <mlc-sound-button  svgPath="mini-lessons/executive-functions/tdi/buttons/sonido-activado.svg" *ngIf="tableName.audio"
+      style="width: 5.5vh;transform: translate(2vh, -0.45vh);cursor: pointer; " (click)="playLoadedSound(tableName.audio)">
+    </mlc-sound-button>
         </div>
         <div #cells *ngFor="let el of tableElements; let t = index" fxLayoutAlign="center center"
           style="border: 1px black solid">

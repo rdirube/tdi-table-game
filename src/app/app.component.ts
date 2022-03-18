@@ -54,9 +54,12 @@ protected getGameResourcesToLoad(): ResourceOx[] {
 
   const sounds:string[] = ['click.mp3', 'bubble01.mp3', 'bubble02.mp3', 'rightAnswer.mp3', 'woosh.mp3', 'wrongAnswer.mp3', 'clickSurrender.mp3', 'cantClick.mp3',  'hint.mp3'].map(z => 'sounds/' + z);
 
+  const localSounds:string[] = ['selectedInput.mp3']
+
+
   return svgElementos.map(x => new ResourceOx('mini-lessons/executive-functions/tdi/buttons/' + x, ResourceType.Svg,
   [ScreenTypeOx.Game], true)).concat(gameResources.map(x => new ResourceOx('mini-lessons/executive-functions/tdi/game/' + x, ResourceType.Svg,
-  [ScreenTypeOx.Game], true))).concat(getResourceArrayFromUrlList(sounds, ResourceType.Audio, true)); 
+  [ScreenTypeOx.Game], true))).concat(getResourceArrayFromUrlList(sounds, ResourceType.Audio, true)).concat(localSounds.map(x => new ResourceOx('tdi/local-sounds/' + x, ResourceType.Audio,[ScreenTypeOx.Game] ,true))); 
 
 }
 

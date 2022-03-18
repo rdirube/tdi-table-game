@@ -2,9 +2,9 @@ import { Component, ElementRef, Input, OnInit, ViewChild, AfterViewInit, EventEm
 import { AnswerType, InitState, TableElement } from 'src/app/shared/types/types';
 import { TdiChallengeService } from 'src/app/shared/services/tdi-challenge.service';
 import { TdiAnswerService } from 'src/app/shared/services/tdi-answer.service';
-import { GameActionsService, HintService } from 'micro-lesson-core';
+import { GameActionsService, HintService, SoundOxService } from 'micro-lesson-core';
 import { empty } from 'rxjs';
-import { CorrectablePart, isEven, PartCorrectness, PartFormat } from 'ox-types';
+import { CorrectablePart, isEven, PartCorrectness, PartFormat, ScreenTypeOx } from 'ox-types';
 import { SubscriberOxDirective } from 'micro-lesson-components';
 import anime from 'animejs'
 import { FeedbackOxService } from 'micro-lesson-core';
@@ -45,12 +45,18 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
     private hintService: HintService,
     private gameActions: GameActionsService<any>,
     public answerService: TdiAnswerService,
-    private feedbackService: FeedbackOxService) {
+    private feedbackService: FeedbackOxService,
+    private soundService: SoundOxService) {
       super()
       this.addSubscription(this.gameActions.checkedAnswer, x => {
         if(this.element.isSelected) {
           this.answerCorrection()
         }   
+      })
+      this.addSubscription(this.challengeService.changeToCorrect, x => {
+        if(this.element.elementType === 'correct') {
+          this.elementContainer.nativeElement.style.backgroundColor = '#0FFF50';
+        }
       })
   }
 
@@ -77,7 +83,7 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
 
- private setAnswer() {
+ private setAnswer(): void {
   if(this.element.isAnswer) {
     this.answer.answer = this.element.value.text;
   }
@@ -91,15 +97,18 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
 
-  focusCell() {
-    if(this.element.elementType !== 'hidden' && this.selectionActivate.state) {
+  public focusCell(): void {
+    const cellsNotAvaiable = this.element.elementType === 'hidden' || this.element.elementType === 'property';
+    if(this.selectionActivate.state && !cellsNotAvaiable) {
       if(this.element.elementType === 'empty') {
         this.wordInput.nativeElement.focus();
-      } else {
-        this.tableElementCorrectablePart();
-      }
+      } 
+      this.tableElementCorrectablePart();
       this.restoreCellsColours.emit(this.element.id - 1);
+      this.soundService.playSoundEffect('tdi/local-sounds/selectedInput.mp3', ScreenTypeOx.Game)
       this.hintService.checkHintAvailable();
+    } else {
+      this.soundService.playSoundEffect('sounds/cantClick.mp3', ScreenTypeOx.Game);
     }
   }
 
@@ -108,7 +117,7 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
 
-  public parsedTypes(type: string, element: TableElement) {
+  public parsedTypes(type: string, element: TableElement):void {
     switch (type) {
       case 'Fijo':
         element.elementType = 'fixed';
@@ -129,7 +138,7 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
 
-  public answerCorrection () {
+  public answerCorrection():void {
     if(this.answer.answer === this.wordInput.nativeElement.value) {
       this.correctAnswerAnimation();
     } else {
@@ -143,7 +152,7 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
 
-  isAnswerReady() {
+  private isAnswerReady() : void {
     const fixedCondition = this.element.elementType === 'empty' && this.element.value.text !== '';
     const emptyCondition = this.element.elementType === 'fixed' && this.element.isSelected;
     if (fixedCondition || emptyCondition) {
@@ -171,7 +180,6 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
     this.answerService.currentAnswer = {
       parts: correctablePart as CorrectablePart[]
     }
-    console.log(this.answerService.currentAnswer);
     this.isAnswerReady();
   }
 
@@ -180,13 +188,12 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
 
-  correctAnswerAnimation() {
+ public correctAnswerAnimation():void {
     this.element.elementType = 'correct';
     this.element.isSelected = false;
     this.selectionActivate.state = false;
     anime({
       targets: this.elementContainer.nativeElement,
-      backgroundColor:'#0FFF50',
       keyframes:[
         {
           filter: 'brightness(90%)',
@@ -207,7 +214,7 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
 
-  wrongAnswerAnimation() {
+  public wrongAnswerAnimation():void {
     this.selectionActivate.state = false;
       anime({
         targets: this.elementContainer.nativeElement,
@@ -226,9 +233,11 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 }
 
 
+public playLoadedSound(sound: string) {
+  this.soundService.playSoundEffect(sound, ScreenTypeOx.Game);
+}
 
-
-public unBloquedAnimation() {
+public unBloquedAnimation():void {
   anime({
     targets: this.blockedDiv.nativeElement,
     duration: 550,
