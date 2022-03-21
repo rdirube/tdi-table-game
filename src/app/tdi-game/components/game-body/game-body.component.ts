@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChildren, AfterViewInit, QueryList, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChildren, AfterViewInit, QueryList, ViewChild, ElementRef, EventEmitter, HostListener } from '@angular/core';
 import {
   EndGameService,
   FeedbackOxService,
@@ -16,6 +16,8 @@ import { AnswerType, HintGenerator, HintType, InitState, Measurements, Table, Ta
 import { filter, take, timer } from 'rxjs';
 import { TableValueComponent } from '../table-value/table-value.component';
 import { ThisReceiver } from '@angular/compiler';
+import { ComposeAnimGenerator, ComposeService } from 'ox-animations';
+
 
 
 @Component({
@@ -29,6 +31,11 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
   @ViewChildren('cells') cells!: QueryList<ElementRef>;
   @ViewChildren('tableValueComponent') tableValueComponent!: QueryList<TableValueComponent>;
+  @ViewChild('tableContainer') tableContainer!: ElementRef;
+  @ViewChild('statementContainer') statementContainer!: ElementRef;
+
+
+  public composeEvent = new EventEmitter<{composeInZero: boolean}>();
 
   public tableWidth: number = 0;
   public cellsArray!: any;
@@ -65,9 +72,9 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
   public currentExercise!: Table;
   private avaiableHints!: HintType[];
   private restart!: boolean;
-  
+  public currentCorrects!:number;
 
-  constructor(private challengeService: TdiChallengeService,
+    constructor(private challengeService: TdiChallengeService,
     private metricsService: MicroLessonMetricsService<any>,
     private gameActions: GameActionsService<any>,
     private hintService: HintService,
@@ -75,14 +82,29 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
     private endService: EndGameService,
     private feedbackService: FeedbackOxService,
     private answerService: TdiAnswerService,
-  ) {
+    private composeService: ComposeService<any>,
+    ) {
     super();
+    this.currentExercise =  {
+      columns: 1,
+      rows: 1,
+      entrance: '',
+      measures: {width: 0, height: 0},
+      setedTable: '',
+      statement: {text: '', audio: ''},
+      tableElements: [{elementType: 'empty', id: 0,isAnswer: false, isSelected: false, m: 0, n: 0, value: {text: '', audio: ''}}],
+      tableName: {text: '', audio: ''},
+      tableWidth: 2
+    }
     this.newExercise = true;
     this.restart = false;
- 
+    this.composeService.setSubscriptions(this.composeEvent)
+    this.composeService.composeTime = 700;
+    this.composeService.decomposeTime = 700;
 
     this.addSubscription(this.challengeService.currentExercise.pipe(filter(x => x !== undefined)),
-      (exercise: ExerciseOx<TdiExercise>) => {
+      (exercise: ExerciseOx<TdiExercise>) => 
+      {
         this.selectionActivate.state = true;
         const tableExerciseQuantity = this.exercise ? this.currentExercise.tableElements.filter(el => el.isAnswer).length : 1000;
         const correctAnswers = this.exercise ? this.currentExercise.tableElements.filter(el => el.elementType === 'correct').length : 0;
@@ -101,7 +123,6 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
         }
         this.addMetric();
         this.exercise = exercise.exerciseData;
-        // this.allExecirseCorrect = this.exercise.table.map(table => table.tableElements.filter(el => el.elementType === 'correct')) === this.
         this.challengeService.tablesIndex = this.restart ? 0 : this.challengeService.tablesIndex;
         this.currentExercise = this.exercise.table[this.challengeService.tablesIndex];
         this.newExercise = false;
@@ -123,15 +144,15 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
           text: this.currentExercise.tableName.text,
           audio: this.currentExercise.tableName.audio
         }
-        this.hintService.usesPerChallenge = this.challengeService.exerciseConfig.advancedSettings ? this.challengeService.exerciseConfig.advancedSettings.length : 0;
-        this.currentExercise.tableElements.forEach(el => this.init.push({
+      this.hintService.usesPerChallenge = this.challengeService.exerciseConfig.advancedSettings ? this.challengeService.exerciseConfig.advancedSettings.length : 0;
+      this.currentExercise.tableElements.forEach(el => this.init.push({
           init: false
-        }))
-        this.hint = new HintGenerator(this.currentExercise.tableElements);
-        this.restart = true;
+      }))
+      this.hint = new HintGenerator(this.currentExercise.tableElements);
+      this.restart = true;
       });
 
-    this.addSubscription(this.gameActions.showHint, x => {
+      this.addSubscription(this.gameActions.showHint, x => {
       this.restoreCellsColour();
       this.allExerciseAreCorrectValidator();
       const tableArrayCurrentValue = this.tableValueComponent.toArray()
@@ -145,34 +166,44 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
       }
       this.avaiableHints.shift();
     })
-    this.addSubscription(this.gameActions.surrender, surr => {
+      this.addSubscription(this.gameActions.surrender, surr => {
       this.surrender();
     })
   }
 
 
-
+  // @HostListener('document:keydown', ['$event'])
+  // asdasdas($event: any){
+  //   this.composeEvent.emit();
+  // }
 
 
   ngOnInit(): void {
+                        
   }
 
 
 
 
   ngAfterViewInit(): void {
+    this.composeService.addComposable(this.tableContainer.nativeElement,ComposeAnimGenerator.fromLeft() , ComposeAnimGenerator.toRight());
+    this.composeService.addComposable(this.statementContainer.nativeElement, ComposeAnimGenerator.fromTop(), ComposeAnimGenerator.toTop());
   }
 
 
 
   public tryAnswer() {
     this.answerService.tryAnswer.emit();
+    
   }
+  
 
 
   public playLoadedSound(sound: string) {
     this.soundService.playSoundEffect(sound, ScreenTypeOx.Game);
   }
+
+
 
   allExerciseAreCorrectValidator(): boolean {
     const answers: TableElement[] = [];
@@ -277,5 +308,7 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
 }
+
+
 
 

@@ -8,11 +8,11 @@
       <mlc-to-in-game-menu-button [forceNoAnimations]="true" style="width: 13vh;"
         svgPath="mini-lessons/executive-functions/tdi/buttons/menu.svg">
       </mlc-to-in-game-menu-button>
-      <div style="width: 77%; height:12vh; border-radius: 20px; background-color: #EF8275; transform: translateY(1vh); border: 5px dotted black" fxLayoutAlign="center center">
+      <div #statementContainer style="width: 77%; height:12vh; border-radius: 20px; background-color: #EF8275; transform: translateY(1vh); border: 5px dotted black; padding: 4vh;" fxLayoutAlign="center center">
         <ox-text [originalText]="statement.text"   fontSize="3.1vh" color="black" font="dinnRegular">
         </ox-text>
         <mlc-sound-button  svgPath="mini-lessons/executive-functions/tdi/buttons/sonido-activado.svg" *ngIf="statement.audio"
-    style="width: 6.5vh;transform: translate(2vh, -0.5vh);cursor: pointer; " (click)="playLoadedSound(currentExercise.statement.audio)">
+    style="width: 13.5vh;transform: translate(2vh, -0.5vh);cursor: pointer; " (click)="playLoadedSound(currentExercise.statement.audio)">
     </mlc-sound-button>
       </div>
       <mlc-hint-button style="width: 13vh; opacity: 1;"
@@ -22,8 +22,8 @@
    
     <div style="width: 150vh; height: 85vh;" fxLayoutAlign="center center">
        
-      <div *ngIf="exercise" style="transform: translateY(1vh);" [ngStyle]="{'width' : tableWidth + 'vh'}" fxLayout="row wrap" fxLayoutAlign="center center">
-        <div style="background-color: #f4e8a4; height:7.5vh;border:1px solid black; border-bottom: 0.5px;"
+      <div  #tableContainer style="transform: translateY(1vh);" [ngStyle]="{'width' :  tableWidth  + 'vh'}" fxLayout="row wrap" fxLayoutAlign="center center">
+        <div style="background-color: rgb(255, 145, 0); height:7.5vh;border:1px solid black; border-bottom: 0.5px;"
           [ngStyle]="{'width' : currentExercise.measures.width * currentExercise.columns + (pxToVHVar * 2 * currentExercise.columns)+ 'vh'}"
           fxLayoutAlign="center center" *ngIf="currentExercise.tableName.text !== ''" fxLayoutAlign="center center">
           <ox-text #wordOxText [originalText]="currentExercise.tableName.text"  fontSize="3.1vh"
@@ -38,7 +38,7 @@
             [rows]="currentExercise.rows" [variableWidth]="currentExercise.measures.width"
             [variableHeight]="currentExercise.measures.height" [tableWidth]="currentExercise.tableWidth"
             [columns]="currentExercise.columns" [element]="currentExercise.tableElements[t]" [init]="init[t]"
-            [answer]="answerArray[t]" [selectionActivate]="selectionActivate">
+            [answer]="answerArray[t]" [selectionActivate]="selectionActivate" [newExercise]="newExercise">
           </app-table-value>
         </div>
       </div>

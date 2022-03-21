@@ -5,6 +5,9 @@ import {MicroLessonComponentsModule} from 'micro-lesson-components';
 import {NgoxPostMessageModule} from 'ngox-post-message';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { ComponentsOxModule } from 'micro-lesson-components';
+import { OxAnimationsModule } from 'ox-animations';
+
+
 
 @NgModule({
   declarations: [],
@@ -14,7 +17,8 @@ import { ComponentsOxModule } from 'micro-lesson-components';
     NgoxPostMessageModule,
     MicroLessonComponentsModule,
     FlexLayoutModule,
-   ComponentsOxModule
+   ComponentsOxModule,
+   OxAnimationsModule
   ],
   exports:[
     CommonModule,
@@ -22,7 +26,8 @@ import { ComponentsOxModule } from 'micro-lesson-components';
     NgoxPostMessageModule,
     MicroLessonComponentsModule,
     FlexLayoutModule,
-    ComponentsOxModule
+    ComponentsOxModule,
+    OxAnimationsModule
   ],
 })
 export class SharedModule { }

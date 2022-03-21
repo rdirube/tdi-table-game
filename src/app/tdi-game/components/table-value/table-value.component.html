@@ -9,7 +9,7 @@
         path="mini-lessons/executive-functions/tdi/game/locker.svg" fxLayoutAlign="center center">
       </mlc-loaded-svg>
     </div>
-    <mlc-sound-button  svgPath="mini-lessons/executive-functions/tdi/buttons/sonido-activado.svg" *ngIf="element.value.audio && element.elementType === 'fixed'"
+    <mlc-sound-button  svgPath="mini-lessons/executive-functions/tdi/buttons/sonido-activado.svg" *ngIf="element.value.audio && (element.elementType === 'fixed' || element.elementType === 'correct')"
     style="width: 5vh;transform: translate(17vh, 0.5vh);cursor: pointer; position: absolute; z-index: 50;" (click)="playLoadedSound(element.value.audio)">
     </mlc-sound-button>
 </div>

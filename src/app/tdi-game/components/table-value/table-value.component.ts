@@ -3,7 +3,6 @@ import { AnswerType, InitState, TableElement } from 'src/app/shared/types/types'
 import { TdiChallengeService } from 'src/app/shared/services/tdi-challenge.service';
 import { TdiAnswerService } from 'src/app/shared/services/tdi-answer.service';
 import { GameActionsService, HintService, SoundOxService } from 'micro-lesson-core';
-import { empty } from 'rxjs';
 import { CorrectablePart, isEven, PartCorrectness, PartFormat, ScreenTypeOx } from 'ox-types';
 import { SubscriberOxDirective } from 'micro-lesson-components';
 import anime from 'animejs'
@@ -38,8 +37,8 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
   @Input() selectionActivate!:{
     state:boolean
   };
-
-
+  @Input() newExercise!:boolean;
+  
 
   constructor(public elementRef: ElementRef, public challengeService:TdiChallengeService,
     private hintService: HintService,
@@ -74,6 +73,8 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
   ngAfterViewInit(): void {
   }
+
+
 
 
   ngAfterViewChecked(): void {
@@ -207,6 +208,9 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
       ],
       duration: 1200,
       easing: 'linear',
+      complete: () => {
+              
+      }
     })
   }
 
@@ -233,9 +237,13 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 }
 
 
+
 public playLoadedSound(sound: string) {
   this.soundService.playSoundEffect(sound, ScreenTypeOx.Game);
 }
+
+
+
 
 public unBloquedAnimation():void {
   anime({
