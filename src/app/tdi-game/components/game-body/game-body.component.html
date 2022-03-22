@@ -8,7 +8,7 @@
       <mlc-to-in-game-menu-button [forceNoAnimations]="true" style="width: 13vh;"
         svgPath="tdi/svg/buttons/menu.svg">
       </mlc-to-in-game-menu-button>
-      <div #statementContainer style="width: 77%; height:12vh; border-radius: 20px; background-color: #EF8275; transform: translateY(1vh); border: 5px dotted black; padding: 4vh;" fxLayoutAlign="center center">
+      <div #statementContainer style="width: 77%; height:12vh; border-radius: 20px; background-color: #EF8275; transform: translateY(1vh); border: 0.5vh solid black; padding: 4vh;" fxLayoutAlign="center center">
         <ox-text [originalText]="statement.text"   fontSize="3.1vh" color="black" font="dinnRegular">
         </ox-text>
         <mlc-sound-button  svgPath="tdi/svg/buttons/sonido-activado.svg" *ngIf="statement.audio"

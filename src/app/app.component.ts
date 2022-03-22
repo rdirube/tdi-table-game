@@ -40,9 +40,9 @@ export class AppComponent extends BaseMicroLessonApp {
           microLessonCommunicationService.sendMessageMLToManager(ResourceFinalStateOxBridge, resourceStateService.currentState.value);
         }
       });
-      preloader.addResourcesToLoad(this.getGameResourcesToLoad());
-      this.sound.setSoundOn(true);
-      preloader.loadAll().subscribe(x => this.loaded = true)
+      // preloader.addResourcesToLoad(this.getGameResourcesToLoad());
+      // this.sound.setSoundOn(true);
+      // preloader.loadAll().subscribe(x => this.loaded = true)
 }
 
 
