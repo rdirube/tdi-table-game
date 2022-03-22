@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "ml-creators"
+  },
+  "targets": {
+    "ml-creators": {
+      "hosting": {
+        "tdi-table-game": [
+          "tdi-table-game"
+        ]
+      }
+    }
+  }
+}

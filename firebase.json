@@ -1,0 +1,13 @@
+{
+  "hosting": [
+    {
+      "target": "tdi-table-game",
+      "public": "dist/tdi",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ]
+    }
+  ]
+}
