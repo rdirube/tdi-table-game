@@ -24,6 +24,7 @@ export interface TdiNivelation {
 }
 
 export interface TdiExercise {
+  exerciseData: TdiExercise;
   table:Table[],
   hints:HintType[]
 }

@@ -82,8 +82,8 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
     private endService: EndGameService,
     private feedbackService: FeedbackOxService,
     private answerService: TdiAnswerService,
-    private composeService: ComposeService<any>,
-    ) {
+    private composeService: ComposeService<any>) 
+    {
     super();
     this.currentExercise =  {
       columns: 1,
@@ -96,62 +96,45 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
       tableName: {text: '', audio: ''},
       tableWidth: 2
     }
-    this.newExercise = true;
     this.restart = false;
-    this.composeService.setSubscriptions(this.composeEvent)
-    this.composeService.composeTime = 700;
-    this.composeService.decomposeTime = 700;
+    this.composeService.setSubscriptions(this.composeEvent, false)
+    this.composeService.composeTime = 650;
+    this.composeService.decomposeTime = 650;
 
+    this.addSubscription(this.challengeService.currentExercise.pipe(filter(x => x === undefined)),
+      (exercise: ExerciseOx<TdiExercise>) => 
+      { 
+        this.exercise = undefined as any;
+      });
     this.addSubscription(this.challengeService.currentExercise.pipe(filter(x => x !== undefined)),
       (exercise: ExerciseOx<TdiExercise>) => 
-      {
+      { 
+        console.log('Estoy recibiendo el currentExercise')
         this.selectionActivate.state = true;
         const tableExerciseQuantity = this.exercise ? this.currentExercise.tableElements.filter(el => el.isAnswer).length : 1000;
         const correctAnswers = this.exercise ? this.currentExercise.tableElements.filter(el => el.elementType === 'correct').length : 0;
         const allExerciseCorrectVal = this.challengeService.exerciseConfig.tables.length - 1 === this.challengeService.tablesIndex && this.exercise ? this.allExerciseAreCorrectValidator() : false;
         this.hintService.usesPerChallenge = this.challengeService.exerciseConfig.advancedSettings ? this.challengeService.exerciseConfig.advancedSettings.length : 0;
         this.avaiableHints = duplicateWithJSON(this.challengeService.exerciseConfig.advancedSettings);
-        if (tableExerciseQuantity <= correctAnswers && !allExerciseCorrectVal) {
+        if (tableExerciseQuantity <= correctAnswers && !allExerciseCorrectVal)
+        {
           this.challengeService.tablesIndex++;
-          this.newExercise = true;
           this.selectionActivate.state = false;
           this.restart = false;
-          this.soundService.playSoundEffect('sounds/woosh.mp3', ScreenTypeOx.Game)
+          console.log('Estoy emitiendo el compose')
+          this.composeEvent.emit();
         }
-        if (this.metricsService.currentMetrics.expandableInfo?.exercisesData.length as number > 0 && !this.newExercise) {
+        if (this.metricsService.currentMetrics.expandableInfo?.exercisesData.length as number > 0) {
           return;
         }
-        this.addMetric();
-        this.exercise = exercise.exerciseData;
-        this.challengeService.tablesIndex = this.restart ? 0 : this.challengeService.tablesIndex;
-        this.currentExercise = this.exercise.table[this.challengeService.tablesIndex];
-        this.newExercise = false;
-        this.answerArray = [];
-        this.currentExercise.tableElements.forEach((el, i) => this.answerArray.push({
-          id: i + 1,
-          answer: '',
-          empty: false,
-        }))
-        this.selectionActivate.state = true;
-        this.tableClass.sizeCalculator(this.currentExercise.rows, this.currentExercise.columns, this.currentExercise.measures.width, this.currentExercise.measures.height, this.currentExercise.tableWidth);
-        this.tableWidth = this.currentExercise.tableWidth;
-        this.tableElements = this.currentExercise.tableElements;
-        this.statement = {
-          text: this.currentExercise.statement.text,
-          audio: this.currentExercise.statement.audio
-        } 
-        this.tableName = {
-          text: this.currentExercise.tableName.text,
-          audio: this.currentExercise.tableName.audio
-        }
-      this.hintService.usesPerChallenge = this.challengeService.exerciseConfig.advancedSettings ? this.challengeService.exerciseConfig.advancedSettings.length : 0;
-      this.currentExercise.tableElements.forEach(el => this.init.push({
-          init: false
-      }))
-      this.hint = new HintGenerator(this.currentExercise.tableElements);
-      this.restart = true;
+        this.nextExercise(exercise.exerciseData);
       });
-
+      this.addSubscription(this.composeService.composablesObjectsOut, x => {
+        this.nextExercise(this.exercise)
+      })
+      this.addSubscription(this.composeService.composablesAtPosition, x => {
+        this.selectionActivate.state = true;
+      })
       this.addSubscription(this.gameActions.showHint, x => {
       this.restoreCellsColour();
       this.allExerciseAreCorrectValidator();
@@ -166,16 +149,13 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
       }
       this.avaiableHints.shift();
     })
+
       this.addSubscription(this.gameActions.surrender, surr => {
       this.surrender();
     })
   }
 
 
-  // @HostListener('document:keydown', ['$event'])
-  // asdasdas($event: any){
-  //   this.composeEvent.emit();
-  // }
 
 
   ngOnInit(): void {
@@ -184,10 +164,9 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
 
-
   ngAfterViewInit(): void {
-    this.composeService.addComposable(this.tableContainer.nativeElement,ComposeAnimGenerator.fromLeft() , ComposeAnimGenerator.toRight());
-    this.composeService.addComposable(this.statementContainer.nativeElement, ComposeAnimGenerator.fromTop(), ComposeAnimGenerator.toTop());
+    this.composeService.addComposable(this.tableContainer.nativeElement, ComposeAnimGenerator.fromLeft(), ComposeAnimGenerator.toRight(), false);
+    this.composeService.addComposable(this.statementContainer.nativeElement, ComposeAnimGenerator.fromTop(), ComposeAnimGenerator.toTop(), false);
   }
 
 
@@ -299,10 +278,45 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
 
+  private nextExercise(exercise: TdiExercise) {
+        this.addMetric();
+        this.exercise = exercise;
+        this.challengeService.tablesIndex = this.restart ? 0 : this.challengeService.tablesIndex;
+        this.currentExercise = this.exercise.table[this.challengeService.tablesIndex];
+        this.newExercise = false;
+        this.answerArray = [];
+        this.currentExercise.tableElements.forEach((el, i) => this.answerArray.push({
+          id: i + 1,
+          answer: '',
+          empty: false,
+        }))
+        this.selectionActivate.state = true;
+        this.tableClass.sizeCalculator(this.currentExercise.rows, this.currentExercise.columns, this.currentExercise.measures.width, this.currentExercise.measures.height, this.currentExercise.tableWidth);
+        this.tableWidth = this.currentExercise.tableWidth;
+        this.tableElements = this.currentExercise.tableElements;
+        this.statement = {
+          text: this.currentExercise.statement.text,
+          audio: this.currentExercise.statement.audio
+        } 
+        this.tableName = {
+          text: this.currentExercise.tableName.text,
+          audio: this.currentExercise.tableName.audio
+        }
+      this.hintService.usesPerChallenge = this.challengeService.exerciseConfig.advancedSettings ? this.challengeService.exerciseConfig.advancedSettings.length : 0;
+      this.currentExercise.tableElements.forEach(el => this.init.push({
+          init: false
+      }))
+      this.hint = new HintGenerator(this.currentExercise.tableElements);
+      this.restart = true;
+  }
+
+
 
   get correctGetter(): TableElement[] {
     return this.answerQuantityCalc();
   }
+
+
 
 
 

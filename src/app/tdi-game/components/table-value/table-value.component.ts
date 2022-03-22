@@ -1,5 +1,5 @@
 import { Component, ElementRef, Input, OnInit, ViewChild, AfterViewInit, EventEmitter, Output, AfterViewChecked } from '@angular/core';
-import { AnswerType, InitState, TableElement } from 'src/app/shared/types/types';
+import { AnswerType, InitState, TableElement, TdiExercise } from 'src/app/shared/types/types';
 import { TdiChallengeService } from 'src/app/shared/services/tdi-challenge.service';
 import { TdiAnswerService } from 'src/app/shared/services/tdi-answer.service';
 import { GameActionsService, HintService, SoundOxService } from 'micro-lesson-core';
@@ -7,6 +7,7 @@ import { CorrectablePart, isEven, PartCorrectness, PartFormat, ScreenTypeOx } fr
 import { SubscriberOxDirective } from 'micro-lesson-components';
 import anime from 'animejs'
 import { FeedbackOxService } from 'micro-lesson-core';
+import { ComposeElement, ComposeService } from 'ox-animations';
 
 
 @Component({
@@ -45,17 +46,13 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
     private gameActions: GameActionsService<any>,
     public answerService: TdiAnswerService,
     private feedbackService: FeedbackOxService,
-    private soundService: SoundOxService) {
+    private soundService: SoundOxService,
+    private composeService: ComposeService<TdiExercise>) {
       super()
       this.addSubscription(this.gameActions.checkedAnswer, x => {
         if(this.element.isSelected) {
           this.answerCorrection()
         }   
-      })
-      this.addSubscription(this.challengeService.changeToCorrect, x => {
-        if(this.element.elementType === 'correct') {
-          this.elementContainer.nativeElement.style.backgroundColor = '#0FFF50';
-        }
       })
   }
 
@@ -145,7 +142,8 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
     } else {
       this.wrongAnswerAnimation();
     }
-   this.feedbackService.endFeedback.emit();
+    this.feedbackService.endFeedback.emit();
+
   }
 
 
@@ -208,9 +206,6 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
       ],
       duration: 1200,
       easing: 'linear',
-      complete: () => {
-              
-      }
     })
   }
 

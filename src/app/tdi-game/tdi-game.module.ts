@@ -5,6 +5,7 @@ import { SharedModule } from '../shared/shared.module';
 import { TableValueComponent } from './components/table-value/table-value.component';
 import { FormsModule } from '@angular/forms';
 
+
 @NgModule({
   declarations: [
     GameBodyComponent,

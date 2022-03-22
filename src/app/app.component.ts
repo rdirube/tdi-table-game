@@ -58,7 +58,7 @@ protected getGameResourcesToLoad(): ResourceOx[] {
 
 
   return svgElementos.map(x => new ResourceOx('mini-lessons/executive-functions/tdi/buttons/' + x, ResourceType.Svg,
-  [ScreenTypeOx.Game], true)).concat(gameResources.map(x => new ResourceOx('mini-lessons/executive-functions/tdi/game/' + x, ResourceType.Svg,
+  [ScreenTypeOx.Game], true)).concat(gameResources.map(x => new ResourceOx('mini-lessons/executive-functions/tdi/game/svg/' + x, ResourceType.Svg,
   [ScreenTypeOx.Game], true))).concat(getResourceArrayFromUrlList(sounds, ResourceType.Audio, true)).concat(localSounds.map(x => new ResourceOx('tdi/local-sounds/' + x, ResourceType.Audio,[ScreenTypeOx.Game] ,true))); 
 
 }
