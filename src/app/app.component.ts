@@ -40,16 +40,16 @@ export class AppComponent extends BaseMicroLessonApp {
           microLessonCommunicationService.sendMessageMLToManager(ResourceFinalStateOxBridge, resourceStateService.currentState.value);
         }
       });
-      preloader.addResourcesToLoad(this.getGameResourcesToLoad());
-      this.sound.setSoundOn(true);
-      preloader.loadAll().subscribe(x => this.loaded = true)
+      // preloader.addResourcesToLoad(this.getGameResourcesToLoad());
+      // this.sound.setSoundOn(true);
+      // preloader.loadAll().subscribe(x => this.loaded = true)
 }
 
 
 protected getGameResourcesToLoad(): ResourceOx[] {
 
   const svgElementos: string[] = ['check.svg', 'copa-memotest.svg', 'next-memotest.svg', 'surrender.svg', 'menu.svg', 'pista.svg', 'sonido-activado.svg'];
-  
+
   const gameResources: string[] = ['locker.svg', 'background.svg']
 
   const sounds:string[] = ['click.mp3', 'bubble01.mp3', 'bubble02.mp3', 'rightAnswer.mp3', 'woosh.mp3', 'wrongAnswer.mp3', 'clickSurrender.mp3', 'cantClick.mp3',  'hint.mp3'].map(z => 'sounds/' + z);
@@ -57,10 +57,10 @@ protected getGameResourcesToLoad(): ResourceOx[] {
   const localSounds:string[] = ['selectedInput.mp3']
 
 
-  return svgElementos.map(x => new ResourceOx('mini-lessons/executive-functions/tdi/buttons/' + x, ResourceType.Svg,
-  [ScreenTypeOx.Game], true)).concat(gameResources.map(x => new ResourceOx('mini-lessons/executive-functions/tdi/game/svg/' + x, ResourceType.Svg,
-  [ScreenTypeOx.Game], true))).concat(getResourceArrayFromUrlList(sounds, ResourceType.Audio, true)).concat(localSounds.map(x => new ResourceOx('tdi/local-sounds/' + x, ResourceType.Audio,[ScreenTypeOx.Game] ,true))); 
-
+  return svgElementos.map(x => new ResourceOx('tdi/svg/buttons/' + x, ResourceType.Svg, [ScreenTypeOx.Game], true))
+    .concat(gameResources.map(x => new ResourceOx('tdi/svg/game/' + x, ResourceType.Svg, [ScreenTypeOx.Game], true)))
+    .concat(getResourceArrayFromUrlList(sounds, ResourceType.Audio, false))
+    .concat(localSounds.map(x => new ResourceOx('tdi/local-sounds/' + x, ResourceType.Audio,[ScreenTypeOx.Game] ,true)));
 }
 
 
