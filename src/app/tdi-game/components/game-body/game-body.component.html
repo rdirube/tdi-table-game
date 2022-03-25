@@ -23,7 +23,7 @@
     <div #tableContainer  style="width: 155vh; height: 85vh;" fxLayoutAlign="center center">
       <div  style="transform: translateY(1vh);" [ngStyle]="{'width' :  tableWidth  + 'vh'}" fxLayout="row wrap" fxLayoutAlign="center center">
         <div style="background-color: rgb(255, 145, 0); height:7.5vh;border:1px solid black; border-bottom: 0.5px;"
-          [ngStyle]="{'width' : currentExercise.measures.width * currentExercise.columns + (pxToVHVar * 2 * currentExercise.columns)+ 'vh'}"
+          [ngStyle]="{'width' : tableTitleDivWidth + 'vh'}"
           fxLayoutAlign="center center" fxLayoutAlign="center center">
           <ox-text #wordOxText [originalText]="currentExercise.tableName.text"  fontSize="3.1vh"
             color="black" font="dinnRegular"></ox-text>

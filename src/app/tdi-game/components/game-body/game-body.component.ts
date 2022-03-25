@@ -73,6 +73,7 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
   private avaiableHints!: HintType[];
   private restart!: boolean;
   public currentCorrects!:number;
+  public tableTitleDivWidth!:number;
 
     constructor(private challengeService: TdiChallengeService,
     private metricsService: MicroLessonMetricsService<any>,
@@ -127,7 +128,9 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
         if (this.metricsService.currentMetrics.expandableInfo?.exercisesData.length as number > 0) {
           return;
         }
+        
         this.nextExercise(exercise.exerciseData);
+        this.tableTitleDivWidth = this.currentExercise.measures.width * this.currentExercise.columns + (this.pxToVHVar * 2 * this.currentExercise.columns);
       });
       this.addSubscription(this.composeService.composablesObjectsOut, x => {
         this.nextExercise(this.exercise)
