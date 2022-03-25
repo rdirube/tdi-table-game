@@ -62,6 +62,8 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
   ngOnInit(): void {
     this.parsedTypes(this.element.elementType, this.element);
     this.setAnswer();
+    this.element.isSelected = false;
+
   }
 
 
