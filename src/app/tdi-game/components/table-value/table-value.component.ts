@@ -54,6 +54,9 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
           this.answerCorrection()
         }   
       })
+      this.addSubscription(this.challengeService.actionToAnswerEmit, x => {
+        this.isAnswerReady();
+      })
   }
 
 
@@ -63,6 +66,7 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
     this.parsedTypes(this.element.elementType, this.element);
     this.setAnswer();
     this.element.isSelected = false;
+    console.log('tableComp');
 
   }
 
@@ -154,10 +158,12 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
   private isAnswerReady() : void {
-    const fixedCondition = this.element.elementType === 'empty' && this.element.value.text !== '';
-    const emptyCondition = this.element.elementType === 'fixed' && this.element.isSelected;
+    const emptyCondition = this.element.elementType === 'empty' && this.element.value.text !== '';
+    const fixedCondition = this.element.elementType === 'fixed' && this.element.isSelected;
     if (fixedCondition || emptyCondition) {
       this.gameActions.actionToAnswer.emit()
+      console.log('actionToAnswer');
+      console.log(this.hintService);
     }
   }
 
@@ -181,7 +187,10 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
     this.answerService.currentAnswer = {
       parts: correctablePart as CorrectablePart[]
     }
-    this.isAnswerReady();
+    if(this.element.elementType === 'empty') {
+      this.isAnswerReady();
+
+    }
   }
 
 

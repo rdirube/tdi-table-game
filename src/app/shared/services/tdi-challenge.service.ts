@@ -17,7 +17,7 @@ export class TdiChallengeService extends ChallengeService<TdiExercise, any>{
 
 
   inputModified = new EventEmitter();
-  changeToCorrect = new EventEmitter<number[]>();
+  actionToAnswerEmit = new EventEmitter();
 
   protected generateNextChallenge(subLevel: number): ExerciseOx<TdiExercise> {
     return new ExerciseOx(

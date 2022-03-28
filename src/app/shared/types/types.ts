@@ -1,7 +1,7 @@
 import { FormGroup } from "@angular/forms";
 import { anyElement, numberArrayRange } from "ox-types";
 
-export type ElementType = 'property' | 'fixed' | 'empty' | 'hidden' | 'hidden-hint' | 'null' | 'correct';
+export type ElementType = 'property' | 'fixed' | 'empty' | 'hidden' | 'hidden-hint' | 'null' | 'correct' | 'Tapado';
 export type HintType = 'Iluminación encabezado'| 'Iluminación de ejes'| 'Desbloquear tapados';
 
 

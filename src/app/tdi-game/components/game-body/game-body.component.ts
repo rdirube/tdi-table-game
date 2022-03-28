@@ -115,8 +115,9 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
         const tableExerciseQuantity = this.exercise ? this.currentExercise.tableElements.filter(el => el.isAnswer).length : 1000;
         const correctAnswers = this.exercise ? this.currentExercise.tableElements.filter(el => el.elementType === 'correct').length : 0;
         const allExerciseCorrectVal = this.challengeService.exerciseConfig.tables.length - 1 === this.challengeService.tablesIndex && this.exercise ? this.allExerciseAreCorrectValidator() : false;
-        this.hintService.usesPerChallenge = this.challengeService.exerciseConfig.advancedSettings ? this.challengeService.exerciseConfig.advancedSettings.length : 0;
         this.avaiableHints = duplicateWithJSON(this.challengeService.exerciseConfig.advancedSettings);
+        this.hintService.usesPerChallenge = this.hintsAvaiableCalculator();
+        console.log('hola');
         if (tableExerciseQuantity <= correctAnswers && !allExerciseCorrectVal)
         {
           this.challengeService.tablesIndex++;
@@ -142,17 +143,17 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
       this.restoreCellsColour();
       this.allExerciseAreCorrectValidator();
       const tableArrayCurrentValue = this.tableValueComponent.toArray()
-      if (this.avaiableHints.find(hint => hint === 'Iluminación encabezado')) {
-        this.hint.hintModel1and2(true, this.currentExercise.entrance, this.currentExercise.setedTable);
-      } else if (this.avaiableHints.find(hint => hint === 'Iluminación de ejes')) {
+      if (this.avaiableHints.find(hint => hint === "Iluminación encabezado")) {
+        this.hint.hintModel1and2(true, this.currentExercise.entrance, this.currentExercise.setedTable)
+      } else if (this.avaiableHints.find(hint => hint === "Iluminación de ejes")) {
         this.hint.hintModel1and2(false, this.currentExercise.entrance, this.currentExercise.setedTable);
-      } else if (this.avaiableHints.find(hint => hint === 'Desbloquear tapados') && this.currentExercise.tableElements.find(el => el.elementType === 'hidden')) {
+      } else {
         const indexToUnblock = this.hint.hintModel3(this.currentExercise.tableElements);
         tableArrayCurrentValue[indexToUnblock].unBloquedAnimation();
       }
+      console.log(this.hintService);
       this.avaiableHints.shift();
     })
-
       this.addSubscription(this.gameActions.surrender, surr => {
       this.surrender();
     })
@@ -161,8 +162,8 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
 
-  ngOnInit(): void {
-                        
+  ngOnInit(): void {                  
+  
   }
 
 
@@ -175,10 +176,11 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
   public tryAnswer() {
-    this.answerService.tryAnswer.emit();
-    
+    this.answerService.tryAnswer.emit();  
   }
   
+
+
 
 
   public playLoadedSound(sound: string) {
@@ -187,11 +189,29 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
 
+
+
   allExerciseAreCorrectValidator(): boolean {
     const answers: TableElement[] = [];
     this.currentExercise.tableElements.filter(el => el.isAnswer).forEach(el => answers.push(el)); 
     return answers.length === this.correctGetter.length;
   }
+
+
+  
+  private hintsAvaiableCalculator():number {
+    const hiddenAvaiable = this.challengeService.exerciseConfig.tables[this.challengeService.tablesIndex].tableElements.find(el => el.elementType === 'Tapado') && this.avaiableHints.find(hint => hint === "Desbloquear tapados") ? true : false;
+    if(this.challengeService.exerciseConfig.advancedSettings) {
+      if(hiddenAvaiable) {
+        return this.challengeService.exerciseConfig.advancedSettings.length;
+      } else {
+        return this.challengeService.exerciseConfig.advancedSettings.filter(hints => hints !== 'Desbloquear tapados').length
+      } 
+    } else {
+      return 0
+    }
+  } 
+
 
 
 
@@ -207,13 +227,15 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
 
+
+
   public restoreCellsColoursAndSelect(id: number) {
     this.restoreCellsColour();
     const typesAllowToSelect = this.tableElements[id].elementType === 'empty' || this.tableElements[id].elementType === 'fixed';
     if (typesAllowToSelect && this.selectionActivate.state) {
       this.tableElements[id].isSelected = true;
     }
-      this.challengeService.changeToCorrect.emit();
+      this.challengeService.actionToAnswerEmit.emit();
 
   }
 
@@ -257,7 +279,6 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
   private surrender(): void {
-    console.log(this.tableValueComponent);
     const answerId = this.currentExercise.tableElements.map(el => el.id).find(id => this.currentExercise.tableElements[id - 1].isAnswer && this.currentExercise.tableElements[id - 1].elementType !== 'correct');
     const tableArrayCurrentValue = this.tableValueComponent.toArray()
     if (this.currentExercise.tableElements[(answerId as number) - 1].elementType === 'empty') {
@@ -305,13 +326,14 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
           text: this.currentExercise.tableName.text,
           audio: this.currentExercise.tableName.audio
         }
-      this.hintService.usesPerChallenge = this.challengeService.exerciseConfig.advancedSettings ? this.challengeService.exerciseConfig.advancedSettings.length : 0;
       this.currentExercise.tableElements.forEach(el => this.init.push({
           init: false
       }))
       this.hint = new HintGenerator(this.currentExercise.tableElements);
       this.restart = true;
   }
+
+
 
 
 
