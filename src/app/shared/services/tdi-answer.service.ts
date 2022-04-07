@@ -12,6 +12,7 @@ export class TdiAnswerService extends AnswerService {
   public answer:TableElement[] = [];
 
   protected isValidAnswer(answer: UserAnswer): boolean {
+    console.log(this.currentAnswer);
     return this.currentAnswer.parts.every(part => part.parts.every(part => part.value !== ''))
   }
 

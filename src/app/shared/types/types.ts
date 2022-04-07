@@ -1,8 +1,9 @@
 import { FormGroup } from "@angular/forms";
 import { anyElement, numberArrayRange } from "ox-types";
 
-export type ElementType = 'property' | 'fixed' | 'empty' | 'hidden' | 'hidden-hint' | 'null' | 'correct' | 'Tapado';
+export type ElementType = 'property' | 'fixed' | 'empty' | 'hidden' | 'hidden-hint' | 'null' | 'correct' | 'Tapado'| 'selected-fixed' | 'filled';
 export type HintType = 'Iluminación encabezado'| 'Iluminación de ejes'| 'Desbloquear tapados';
+export type ExerciseType = 'Completar casilleros' | 'Seleccionar casilleros'
 
 
 
@@ -40,6 +41,7 @@ export interface Table {
 statement: TextWithAudio,
 tableName: TextWithAudio,
 entrance: string,
+exerciseType:ExerciseType,
 columns: number,
 rows: number,
 tableElements: TableElement[],

@@ -12,7 +12,7 @@ import { ExerciseOx } from 'ox-core';
 import { anyElement, duplicateWithJSON, ExerciseData, MultipleChoiceSchemaData, numberArrayRange, OptionShowable, OxImageInfo, ScreenTypeOx, Showable } from 'ox-types';
 import { TdiAnswerService } from 'src/app/shared/services/tdi-answer.service';
 import { SubscriberOxDirective } from 'micro-lesson-components';
-import { AnswerType, HintGenerator, HintType, InitState, Measurements, Table, TableElement, TableGenerator, TdiExercise, TextWithAudio } from 'src/app/shared/types/types';
+import { AnswerType, ExerciseType, HintGenerator, HintType, InitState, Measurements, Table, TableElement, TableGenerator, TdiExercise, TextWithAudio } from 'src/app/shared/types/types';
 import { filter, take, timer } from 'rxjs';
 import { TableValueComponent } from '../table-value/table-value.component';
 import { ThisReceiver } from '@angular/compiler';
@@ -35,7 +35,7 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
   @ViewChild('statementContainer') statementContainer!: ElementRef;
 
 
-  public composeEvent = new EventEmitter<{composeInZero: boolean}>();
+  public composeEvent = new EventEmitter<{ composeInZero: boolean }>();
 
   public tableWidth: number = 0;
   public cellsArray!: any;
@@ -50,14 +50,14 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
   public tableElements: TableElement[] = [];
   public init: InitState[] = [];
   public hint!: any;
-  public statement:TextWithAudio = {
-    text:'',
-    audio:''
+  public statement: TextWithAudio = {
+    text: '',
+    audio: ''
   }
-  
-  public tableName:TextWithAudio = {
-    text:'',
-    audio:''
+
+  public tableName: TextWithAudio = {
+    text: '',
+    audio: ''
   }
 
   public pxToVHVar = 100 / window.innerHeight;
@@ -72,10 +72,12 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
   public currentExercise!: Table;
   private avaiableHints!: HintType[];
   private restart!: boolean;
-  public currentCorrects!:number;
-  public tableTitleDivWidth!:number;
+  public currentCorrects!: number;
+  public tableTitleDivWidth!: number;
+  public titleColor!:string;  
+  public exerciseType!:ExerciseType;
 
-    constructor(private challengeService: TdiChallengeService,
+  constructor(private challengeService: TdiChallengeService,
     private metricsService: MicroLessonMetricsService<any>,
     private gameActions: GameActionsService<any>,
     private hintService: HintService,
@@ -83,18 +85,18 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
     private endService: EndGameService,
     private feedbackService: FeedbackOxService,
     private answerService: TdiAnswerService,
-    private composeService: ComposeService<any>) 
-    {
+    private composeService: ComposeService<any>) {
     super();
-    this.currentExercise =  {
+    this.currentExercise = {
       columns: 1,
       rows: 1,
       entrance: '',
-      measures: {width: 0, height: 0},
+      measures: { width: 0, height: 0 },
+      exerciseType: 'Completar casilleros',
       setedTable: '',
-      statement: {text: '', audio: ''},
-      tableElements: [{elementType: 'empty', id: 0,isAnswer: false, isSelected: false, m: 0, n: 0, value: {text: '', audio: ''}}],
-      tableName: {text: '', audio: ''},
+      statement: { text: '', audio: '' },
+      tableElements: [{ elementType: 'empty', id: 0, isAnswer: false, isSelected: false, m: 0, n: 0, value: { text: '', audio: '' } }],
+      tableName: { text: '', audio: '' },
       tableWidth: 2
     }
     this.restart = false;
@@ -103,13 +105,11 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
     this.composeService.decomposeTime = 650;
 
     this.addSubscription(this.challengeService.currentExercise.pipe(filter(x => x === undefined)),
-      (exercise: ExerciseOx<TdiExercise>) => 
-      { 
+      (exercise: ExerciseOx<TdiExercise>) => {
         this.exercise = undefined as any;
       });
     this.addSubscription(this.challengeService.currentExercise.pipe(filter(x => x !== undefined)),
-      (exercise: ExerciseOx<TdiExercise>) => 
-      { 
+      (exercise: ExerciseOx<TdiExercise>) => {
         console.log('Estoy recibiendo el currentExercise')
         this.selectionActivate.state = true;
         const tableExerciseQuantity = this.exercise ? this.currentExercise.tableElements.filter(el => el.isAnswer).length : 1000;
@@ -118,8 +118,7 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
         this.avaiableHints = duplicateWithJSON(this.challengeService.exerciseConfig.advancedSettings);
         this.hintService.usesPerChallenge = this.hintsAvaiableCalculator();
         console.log('hola');
-        if (tableExerciseQuantity <= correctAnswers && !allExerciseCorrectVal)
-        {
+        if (tableExerciseQuantity <= correctAnswers && !allExerciseCorrectVal) {
           this.challengeService.tablesIndex++;
           this.selectionActivate.state = false;
           this.restart = false;
@@ -129,16 +128,17 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
         if (this.metricsService.currentMetrics.expandableInfo?.exercisesData.length as number > 0) {
           return;
         }
-        
         this.nextExercise(exercise.exerciseData);
+        this.titleColor = this.currentExercise.setedTable === 'Castillo de números' ? 'white' : 'black';
+
       });
-      this.addSubscription(this.composeService.composablesObjectsOut, x => {
-        this.nextExercise(this.exercise)
-      })
-      this.addSubscription(this.composeService.composablesAtPosition, x => {
-        this.selectionActivate.state = true;
-      })
-      this.addSubscription(this.gameActions.showHint, x => {
+    this.addSubscription(this.composeService.composablesObjectsOut, x => {
+      this.nextExercise(this.exercise)
+    })
+    this.addSubscription(this.composeService.composablesAtPosition, x => {
+      this.selectionActivate.state = true;
+    })
+    this.addSubscription(this.gameActions.showHint, x => {
       this.restoreCellsColour();
       this.allExerciseAreCorrectValidator();
       const tableArrayCurrentValue = this.tableValueComponent.toArray()
@@ -153,16 +153,19 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
       console.log(this.hintService);
       this.avaiableHints.shift();
     })
-      this.addSubscription(this.gameActions.surrender, surr => {
+    this.addSubscription(this.gameActions.surrender, surr => {
       this.surrender();
+    })
+    this.addSubscription(this.challengeService.actionToAnswerEmit, x => {
+       this.answerReady();
     })
   }
 
 
 
 
-  ngOnInit(): void {                  
-  
+  ngOnInit(): void {
+
   }
 
 
@@ -175,9 +178,9 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
   public tryAnswer() {
-    this.answerService.tryAnswer.emit();  
+    this.answerService.tryAnswer.emit();
   }
-  
+
 
 
 
@@ -187,29 +190,35 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
   }
 
 
-
+  private answerReady ():void {
+   const elementsCompleted = this.tableElements.filter(el => el.elementType === 'selected-fixed' || el.elementType === 'empty').filter(el => el.value.text !== '');
+   const elementForAnswer = this.tableElements.filter(el => el.isAnswer);
+   if(elementForAnswer.length === elementsCompleted.length) {
+     this.gameActions.actionToAnswer.emit();
+   }
+  }
 
 
   allExerciseAreCorrectValidator(): boolean {
     const answers: TableElement[] = [];
-    this.currentExercise.tableElements.filter(el => el.isAnswer).forEach(el => answers.push(el)); 
+    this.currentExercise.tableElements.filter(el => el.isAnswer).forEach(el => answers.push(el));
     return answers.length === this.correctGetter.length;
   }
 
 
-  
-  private hintsAvaiableCalculator():number {
+
+  private hintsAvaiableCalculator(): number {
     const hiddenAvaiable = this.challengeService.exerciseConfig.tables[this.challengeService.tablesIndex].tableElements.find(el => el.elementType === 'Tapado') && this.avaiableHints.find(hint => hint === "Desbloquear tapados") ? true : false;
-    if(this.challengeService.exerciseConfig.advancedSettings) {
-      if(hiddenAvaiable) {
+    if (this.challengeService.exerciseConfig.advancedSettings) {
+      if (hiddenAvaiable) {
         return this.challengeService.exerciseConfig.advancedSettings.length;
       } else {
         return this.challengeService.exerciseConfig.advancedSettings.filter(hints => hints !== 'Desbloquear tapados').length
-      } 
+      }
     } else {
       return 0
     }
-  } 
+  }
 
 
 
@@ -230,11 +239,10 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
   public restoreCellsColoursAndSelect(id: number) {
     this.restoreCellsColour();
-    const typesAllowToSelect = this.tableElements[id].elementType === 'empty' || this.tableElements[id].elementType === 'fixed';
+    const typesAllowToSelect = ((this.tableElements[id].elementType === 'empty' && this.currentExercise.exerciseType === 'Completar casilleros') || (this.tableElements[id].elementType === 'fixed' && this.currentExercise.exerciseType === 'Seleccionar casilleros') || this.tableElements[id].elementType==='filled');
     if (typesAllowToSelect && this.selectionActivate.state) {
       this.tableElements[id].isSelected = true;
     }
-      this.challengeService.actionToAnswerEmit.emit();
 
   }
 
@@ -302,36 +310,36 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
   private nextExercise(exercise: TdiExercise) {
-        this.addMetric();
-        this.exercise = exercise;
-        this.challengeService.tablesIndex = this.restart ? 0 : this.challengeService.tablesIndex;
-        this.currentExercise = this.exercise.table[this.challengeService.tablesIndex];
-        this.newExercise = false;
-        this.answerArray = [];
-        this.currentExercise.tableElements.forEach((el, i) => this.answerArray.push({
-          id: i + 1,
-          answer: '',
-          empty: false,
-        }))
-        this.selectionActivate.state = true;
-        this.tableClass.sizeCalculator(this.currentExercise.rows, this.currentExercise.columns, this.currentExercise.measures.width, this.currentExercise.measures.height, this.currentExercise.tableWidth);
-        this.tableWidth = this.currentExercise.tableWidth;
-        this.tableElements = this.currentExercise.tableElements;
-        this.statement = {
-          text: this.currentExercise.statement.text,
-          audio: this.currentExercise.statement.audio
-        } 
-        this.tableName = {
-          text: this.currentExercise.tableName.text,
-          audio: this.currentExercise.tableName.audio
-        }
-      this.currentExercise.tableElements.forEach(el => this.init.push({
-          init: false
-      }))
-      this.hint = new HintGenerator(this.currentExercise.tableElements);
-      this.restart = true;
-      this.tableTitleDivWidth = this.currentExercise.measures.width * this.currentExercise.columns + (this.pxToVHVar * 2 * this.currentExercise.columns);
-
+    this.addMetric();
+    this.exercise = exercise;
+    this.challengeService.tablesIndex = this.restart ? 0 : this.challengeService.tablesIndex;
+    this.currentExercise = this.exercise.table[this.challengeService.tablesIndex];
+    this.newExercise = false;
+    this.exerciseType = this.currentExercise.exerciseType;
+    this.answerArray = [];
+    this.currentExercise.tableElements.forEach((el, i) => this.answerArray.push({
+      id: i + 1,
+      answer: '',
+      empty: false,
+    }))
+    this.selectionActivate.state = true;
+    this.tableClass.sizeCalculator(this.currentExercise.rows, this.currentExercise.columns, this.currentExercise.measures.width, this.currentExercise.measures.height, this.currentExercise.tableWidth);
+    this.tableWidth = this.currentExercise.tableWidth;
+    this.tableElements = this.currentExercise.tableElements;
+    this.statement = {
+      text: this.currentExercise.statement.text,
+      audio: this.currentExercise.statement.audio
+    }
+    this.tableName = {
+      text: this.currentExercise.tableName.text,
+      audio: this.currentExercise.tableName.audio
+    }
+    this.currentExercise.tableElements.forEach(el => this.init.push({
+      init: false
+    }))
+    this.hint = new HintGenerator(this.currentExercise.tableElements);
+    this.restart = true;
+    this.tableTitleDivWidth = this.currentExercise.measures.width * this.currentExercise.columns + (this.pxToVHVar * 2 * this.currentExercise.columns);
   }
 
 

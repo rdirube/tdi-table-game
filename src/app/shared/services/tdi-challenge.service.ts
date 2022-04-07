@@ -78,8 +78,7 @@ export class TdiChallengeService extends ChallengeService<TdiExercise, any>{
         break;
       default:
         throw new Error('Wrong game case recived from Wumbox');
-    }
-    
+    }  
   }
 
 }

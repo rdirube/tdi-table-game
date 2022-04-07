@@ -1,5 +1,5 @@
 import { Component, ElementRef, Input, OnInit, ViewChild, AfterViewInit, EventEmitter, Output, AfterViewChecked } from '@angular/core';
-import { AnswerType, InitState, TableElement, TdiExercise } from 'src/app/shared/types/types';
+import { AnswerType, ExerciseType, InitState, TableElement, TdiExercise } from 'src/app/shared/types/types';
 import { TdiChallengeService } from 'src/app/shared/services/tdi-challenge.service';
 import { TdiAnswerService } from 'src/app/shared/services/tdi-answer.service';
 import { GameActionsService, HintService, SoundOxService } from 'micro-lesson-core';
@@ -35,11 +35,13 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
   @Input() variableWidth!:number; 
   @Input() init!:InitState;
   @Input() answer!:AnswerType;
+  @Input() exerciseType!:ExerciseType;
+
   @Input() selectionActivate!:{
     state:boolean
   };
   @Input() newExercise!:boolean;
-  
+  private selectedFixed!:boolean;
 
   constructor(public elementRef: ElementRef, public challengeService:TdiChallengeService,
     private hintService: HintService,
@@ -49,14 +51,15 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
     private soundService: SoundOxService,
     private composeService: ComposeService<TdiExercise>) {
       super()
+      this.selectedFixed = false;
       this.addSubscription(this.gameActions.checkedAnswer, x => {
         if(this.element.isSelected) {
           this.answerCorrection()
         }   
       })
-      this.addSubscription(this.challengeService.actionToAnswerEmit, x => {
-        this.isAnswerReady();
-      })
+      // this.addSubscription(this.challengeService.actionToAnswerEmit, x => {
+      //   this.isAnswerReady();
+      // })
   }
 
 
@@ -106,8 +109,16 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
     if(this.selectionActivate.state && !cellsNotAvaiable) {
       if(this.element.elementType === 'empty') {
         this.wordInput.nativeElement.focus();
+        this.element.value.text = '';
       } 
-      this.tableElementCorrectablePart();
+      if(this.element.elementType === 'selected-fixed') {
+        this.element.elementType = 'fixed'; 
+        this.tableElementCorrectablePart(); 
+      }
+      if(this.element.isSelected && this.element.elementType === 'fixed' && this.exerciseType === 'Seleccionar casilleros') {
+       this.element.elementType = 'selected-fixed';
+       this.tableElementCorrectablePart();
+      }  
       this.restoreCellsColours.emit(this.element.id - 1);
       this.soundService.playSoundEffect('tdi/local-sounds/selectedInput.mp3', ScreenTypeOx.Game)
       this.hintService.checkHintAvailable();
@@ -157,40 +168,42 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
 
-  private isAnswerReady() : void {
-    const emptyCondition = this.element.elementType === 'empty' && this.element.value.text !== '';
-    const fixedCondition = this.element.elementType === 'fixed' && this.element.isSelected;
-    if (fixedCondition || emptyCondition) {
-      this.gameActions.actionToAnswer.emit()
-      console.log('actionToAnswer');
-      console.log(this.hintService);
+  // private isAnswerReady() : void {
+  //   const emptyCondition = this.element.elementType === 'empty' && this.element.value.text !== '';
+  //   const fixedCondition = this.element.elementType === 'fixed' && this.element.isSelected;
+  //   if (fixedCondition || emptyCondition) {
+  //     this.gameActions.actionToAnswer.emit()
+  //   }
+  // }
+
+  
+
+
+
+
+
+
+  public tableElementCorrectablePart(): void { 
+    if(this.exerciseType === 'Completar casilleros') {
+      this.element.elementType = this.wordInput.nativeElement.value !== '' ? 'filled' : 'empty';
     }
-  }
-
-
-
-
-
-
-  public tableElementCorrectablePart(): void {
-     
     const correctablePart = 
-       [{
+       {
         correctness: (this.answer.answer === this.wordInput.nativeElement.value ? 'correct' : 'wrong') as PartCorrectness,
         parts: [
           {
             format: 'word-text' as PartFormat,
             value: this.wordInput.nativeElement.value as string
-          }]
-      }]
+          }
+        ]
+      }
    
-    this.answerService.currentAnswer = {
-      parts: correctablePart as CorrectablePart[]
-    }
+    this.answerService.currentAnswer.parts.push(correctablePart);
     if(this.element.elementType === 'empty') {
-      this.isAnswerReady();
-
+      this.answerService.currentAnswer.parts.slice(this.answerService.currentAnswer.parts.length - 2 , 1);
     }
+    console.log(this.answerService.currentAnswer.parts)
+      this.challengeService.actionToAnswerEmit.emit() 
   }
 
 

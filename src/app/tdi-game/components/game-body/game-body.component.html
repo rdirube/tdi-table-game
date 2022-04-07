@@ -8,7 +8,7 @@
       <mlc-to-in-game-menu-button [forceNoAnimations]="true" style="width: 13vh;"
         svgPath="tdi/svg/buttons/menu.svg">
       </mlc-to-in-game-menu-button>
-      <div #statementContainer style="width: 77%; height:12vh; border-radius: 20px; background-color: #EF8275; transform: translateY(1vh); border: 0.5vh solid black; padding: 4vh;" fxLayoutAlign="center center">
+      <div #statementContainer style="width: 77%; height:12vh; border-radius: 20px; background-color: white; transform: translateY(1vh);  padding: 4vh;" fxLayoutAlign="center center">
         <ox-text [originalText]="statement.text"   fontSize="3.1vh" color="black" font="dinnRegular">
         </ox-text>
         <mlc-sound-button  svgPath="tdi/svg/buttons/sonido-activado.svg" *ngIf="statement.audio"
@@ -23,10 +23,11 @@
     <div #tableContainer  style="width: 155vh; height: 85vh;" fxLayoutAlign="center center">
       <div  style="transform: translateY(1vh);" [ngStyle]="{'width' :  tableWidth  + 'vh'}" fxLayout="row wrap" fxLayoutAlign="center center">
         <div style="background-color: rgb(255, 145, 0); height:7.5vh;border:1px solid black; border-bottom: 0.5px;"
-          [ngStyle]="{'width' : tableTitleDivWidth + 'vh'}"
+          [ngStyle]="{'width' : tableTitleDivWidth + 'vh',
+                      'background-color': currentExercise.setedTable === 'Castillo de números' ? '#4B0082': 'rgb(255, 145, 0)'}"
           fxLayoutAlign="center center" fxLayoutAlign="center center">
           <ox-text #wordOxText [originalText]="currentExercise.tableName.text"  fontSize="3.1vh"
-            color="black" font="dinnRegular"></ox-text>
+            [color]="titleColor" font="dinnRegular"></ox-text>
             <mlc-sound-button  svgPath="tdi/svg/buttons/sonido-activado.svg" *ngIf="tableName.audio"
       style="width: 5.5vh;transform: translate(2vh, -0.45vh);cursor: pointer; " (click)="playLoadedSound(tableName.audio)">
     </mlc-sound-button>
@@ -37,13 +38,13 @@
             [rows]="currentExercise.rows" [variableWidth]="currentExercise.measures.width"
             [variableHeight]="currentExercise.measures.height" [tableWidth]="currentExercise.tableWidth"
             [columns]="currentExercise.columns" [element]="currentExercise.tableElements[t]" [init]="init[t]"
-            [answer]="answerArray[t]" [selectionActivate]="selectionActivate" [newExercise]="newExercise">
+            [answer]="answerArray[t]" [selectionActivate]="selectionActivate" [exerciseType]="exerciseType" [newExercise]="newExercise">
           </app-table-value>
         </div>
       </div>
     </div>
     <div style="position: relative; width: 100%;">
-      <mlc-footer class="button-menu" style=" width: 97.5%; height: 12vh;"
+      <mlc-footer class="button-menu" style=" width: 97.5%; height: 12vh; z-index: 100;"
         trySvg="tdi/svg/buttons/check.svg"
         surrenderSvg="tdi/svg/buttons/surrender.svg"
         resultsSvg="tdi/svg/buttons/copa-memotest.svg"
