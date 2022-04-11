@@ -9,14 +9,15 @@ import {
 } from 'micro-lesson-core';
 import { TdiChallengeService } from 'src/app/shared/services/tdi-challenge.service';
 import { ExerciseOx } from 'ox-core';
-import { anyElement, duplicateWithJSON, ExerciseData, MultipleChoiceSchemaData, numberArrayRange, OptionShowable, OxImageInfo, ScreenTypeOx, Showable } from 'ox-types';
+import { anyElement, CorrectablePart, duplicateWithJSON, equalArrays, ExerciseData, MultipleChoiceSchemaData, numberArrayRange, OptionShowable, OxImageInfo, PartCorrectness, PartFormat, ScreenTypeOx, Showable } from 'ox-types';
 import { TdiAnswerService } from 'src/app/shared/services/tdi-answer.service';
 import { SubscriberOxDirective } from 'micro-lesson-components';
-import { AnswerType, ExerciseType, HintGenerator, HintType, InitState, Measurements, Table, TableElement, TableGenerator, TdiExercise, TextWithAudio } from 'src/app/shared/types/types';
+import { AnswerType, ElementType, ExerciseType, HintGenerator, HintType, InitState, Measurements, Table, TableElement, TableGenerator, TdiExercise, TextWithAudio } from 'src/app/shared/types/types';
 import { filter, take, timer } from 'rxjs';
 import { TableValueComponent } from '../table-value/table-value.component';
 import { ThisReceiver } from '@angular/compiler';
 import { ComposeAnimGenerator, ComposeService } from 'ox-animations';
+import anime from 'animejs';
 
 
 
@@ -29,6 +30,7 @@ import { ComposeAnimGenerator, ComposeService } from 'ox-animations';
 
 export class GameBodyComponent extends SubscriberOxDirective implements OnInit, AfterViewInit {
 
+
   @ViewChildren('cells') cells!: QueryList<ElementRef>;
   @ViewChildren('tableValueComponent') tableValueComponent!: QueryList<TableValueComponent>;
   @ViewChild('tableContainer') tableContainer!: ElementRef;
@@ -36,7 +38,6 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
   public composeEvent = new EventEmitter<{ composeInZero: boolean }>();
-
   public tableWidth: number = 0;
   public cellsArray!: any;
   public tableValueComponentArr!: any[];
@@ -74,8 +75,10 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
   private restart!: boolean;
   public currentCorrects!: number;
   public tableTitleDivWidth!: number;
-  public titleColor!:string;  
-  public exerciseType!:ExerciseType;
+  public titleColor!: string;
+  public exerciseType!: ExerciseType;
+  private currentExerciseCopy!: Table;
+  private answersCorrected!:number;
 
   constructor(private challengeService: TdiChallengeService,
     private metricsService: MicroLessonMetricsService<any>,
@@ -103,26 +106,24 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
     this.composeService.setSubscriptions(this.composeEvent, false)
     this.composeService.composeTime = 650;
     this.composeService.decomposeTime = 650;
-
+    this.answerService.isCompleteAnswer = true;
+    this.answersCorrected = 0;
     this.addSubscription(this.challengeService.currentExercise.pipe(filter(x => x === undefined)),
       (exercise: ExerciseOx<TdiExercise>) => {
         this.exercise = undefined as any;
       });
     this.addSubscription(this.challengeService.currentExercise.pipe(filter(x => x !== undefined)),
       (exercise: ExerciseOx<TdiExercise>) => {
-        console.log('Estoy recibiendo el currentExercise')
         this.selectionActivate.state = true;
         const tableExerciseQuantity = this.exercise ? this.currentExercise.tableElements.filter(el => el.isAnswer).length : 1000;
         const correctAnswers = this.exercise ? this.currentExercise.tableElements.filter(el => el.elementType === 'correct').length : 0;
         const allExerciseCorrectVal = this.challengeService.exerciseConfig.tables.length - 1 === this.challengeService.tablesIndex && this.exercise ? this.allExerciseAreCorrectValidator() : false;
         this.avaiableHints = duplicateWithJSON(this.challengeService.exerciseConfig.advancedSettings);
         this.hintService.usesPerChallenge = this.hintsAvaiableCalculator();
-        console.log('hola');
         if (tableExerciseQuantity <= correctAnswers && !allExerciseCorrectVal) {
           this.challengeService.tablesIndex++;
           this.selectionActivate.state = false;
           this.restart = false;
-          console.log('Estoy emitiendo el compose')
           this.composeEvent.emit();
         }
         if (this.metricsService.currentMetrics.expandableInfo?.exercisesData.length as number > 0) {
@@ -130,7 +131,6 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
         }
         this.nextExercise(exercise.exerciseData);
         this.titleColor = this.currentExercise.setedTable === 'Castillo de números' ? 'white' : 'black';
-
       });
     this.addSubscription(this.composeService.composablesObjectsOut, x => {
       this.nextExercise(this.exercise)
@@ -150,23 +150,41 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
         const indexToUnblock = this.hint.hintModel3(this.currentExercise.tableElements);
         tableArrayCurrentValue[indexToUnblock].unBloquedAnimation();
       }
-      console.log(this.hintService);
       this.avaiableHints.shift();
     })
     this.addSubscription(this.gameActions.surrender, surr => {
       this.surrender();
     })
     this.addSubscription(this.challengeService.actionToAnswerEmit, x => {
-       this.answerReady();
+      this.tableCorrectablePart();
     })
+    this.addSubscription(this.gameActions.checkedAnswer, x => {
+      const exerciseAnswers = this.currentExerciseCopy.tableElements.filter(el => el.isAnswer).map(el => el.value.text);      const filledCells = this.currentExercise.tableElements.filter(el => el.elementType === 'filled');
+      const selectedFixedCells = this.currentExercise.tableElements.filter(el => el.elementType === 'selected-fixed')
+      const exerciseTypeCondition =  this.currentExercise.exerciseType === 'Completar casilleros'
+      const answerDisplayed = exerciseTypeCondition ? filledCells.map(el => el.value.text) : selectedFixedCells.map(el => el.value.text);
+      const answersId = exerciseTypeCondition ? filledCells.map(el => el.id - 1) : selectedFixedCells.map(el => el.id - 1);
+      const answersToCompare = exerciseTypeCondition ? answerDisplayed.length : exerciseAnswers.length; 
+      answerDisplayed.forEach((ans,i) => {
+        if(exerciseAnswers.includes(ans)) {
+          this.answersCorrected++
+          this.correctAnswerAnimation(this.elementCorrected(answersId[i], 'correct'),  answersToCompare);
+        } else {
+          this.wrongAnswerAnimation(this.elementCorrected(answersId[i]), answersId, answersToCompare)
+        }
+      })
+    })
+
   }
+
+
 
 
 
 
   ngOnInit(): void {
-
   }
+
 
 
 
@@ -174,6 +192,7 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
     this.composeService.addComposable(this.tableContainer.nativeElement, ComposeAnimGenerator.fromLeft(), ComposeAnimGenerator.toRight(), false);
     this.composeService.addComposable(this.statementContainer.nativeElement, ComposeAnimGenerator.fromTop(), ComposeAnimGenerator.toTop(), false);
   }
+
 
 
 
@@ -185,25 +204,13 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
 
-  public playLoadedSound(sound: string) {
-    this.soundService.playSoundEffect(sound, ScreenTypeOx.Game);
-  }
-
-
-  private answerReady ():void {
-   const elementsCompleted = this.tableElements.filter(el => el.elementType === 'selected-fixed' || el.elementType === 'empty').filter(el => el.value.text !== '');
-   const elementForAnswer = this.tableElements.filter(el => el.isAnswer);
-   if(elementForAnswer.length === elementsCompleted.length) {
-     this.gameActions.actionToAnswer.emit();
-   }
-  }
-
-
   allExerciseAreCorrectValidator(): boolean {
     const answers: TableElement[] = [];
     this.currentExercise.tableElements.filter(el => el.isAnswer).forEach(el => answers.push(el));
     return answers.length === this.correctGetter.length;
   }
+
+
 
 
 
@@ -223,6 +230,20 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
 
+  private elementCorrected(index:number, correctness?: ElementType) {
+    let correctElementContainer = '' as any;
+    if(correctness === 'correct') {
+      this.tableElements[index].elementType = correctness;
+    }
+    this.tableElements[index].isSelected = false;
+    correctElementContainer = this.tableComponentArray[index];
+    return correctElementContainer;
+  }
+
+  
+
+
+
   private restoreCellsColour(): void {
     const indexOfNotCorrected = this.tableElements.map((el, i) => i).filter(i => this.tableElements[i].elementType !== 'correct')
     const oldSelected = this.tableElements.map((el, i) => i).filter(i => this.tableElements[i].isSelected);
@@ -236,16 +257,99 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
 
+  public playLoadedSound(sound: string) {
+    this.soundService.playSoundEffect(sound, ScreenTypeOx.Game);
+  }
+
+
+
+
+
+  public tableCorrectablePart(): void {
+    const answersArray = duplicateWithJSON(this.challengeService.exerciseConfig.tables[this.challengeService.tablesIndex].tableElements).filter(el => el.isAnswer);
+    const selectedFixed =  this.currentExercise.tableElements.filter(el => el.elementType === 'correct').concat(this.currentExercise.tableElements.filter(el => el.elementType === 'selected-fixed'));
+    const correctablePart = answersArray.map((ans, i) => {
+      const correctnessToReturn = (this.currentExercise.exerciseType === 'Completar casilleros' ? this.currentExercise.tableElements[ans.id - 1].value.text : selectedFixed[i] ? selectedFixed[i].value.text : '')
+      return {
+        correctness: (ans.value.text === correctnessToReturn ? 'correct' : 'wrong') as PartCorrectness,
+        parts: [
+          {
+            format: 'word-text' as PartFormat,
+            value: correctnessToReturn as string
+          }
+        ]
+      }
+    })
+    this.answerService.currentAnswer = {
+      parts: correctablePart as CorrectablePart[]
+    }
+  }
+
+
+
+
 
   public restoreCellsColoursAndSelect(id: number) {
     this.restoreCellsColour();
-    const typesAllowToSelect = ((this.tableElements[id].elementType === 'empty' && this.currentExercise.exerciseType === 'Completar casilleros') || (this.tableElements[id].elementType === 'fixed' && this.currentExercise.exerciseType === 'Seleccionar casilleros') || this.tableElements[id].elementType==='filled');
+    const typesAllowToSelect = (((this.tableElements[id].elementType === 'empty' || this.tableElements[id].elementType === 'filled') && this.currentExercise.exerciseType === 'Completar casilleros') || (this.tableElements[id].elementType === 'fixed' && this.currentExercise.exerciseType === 'Seleccionar casilleros') || this.currentExercise.tableElements[id].isSelected);
     if (typesAllowToSelect && this.selectionActivate.state) {
       this.tableElements[id].isSelected = true;
     }
-
   }
 
+
+
+
+  public correctAnswerAnimation(element: any, answersToCorrect:number): void {
+    this.selectionActivate.state = false;
+    anime({
+      targets: element.elementRef.nativeElement,
+      keyframes: [
+        {
+          filter: 'brightness(90%)',
+        },
+        {
+          filter: 'brightness(110%)',
+        },
+        {
+          filter: '#brightness(100%)',
+        }
+      ],
+      duration: 900,
+      easing: 'linear',
+      complete: () => {
+         if(this.answersCorrected >= answersToCorrect) {
+          this.feedbackService.endFeedback.emit();
+          this.answersCorrected = 0;
+         } else {
+          this.selectionActivate.state = true;
+         }
+      }
+    })
+  }
+
+
+
+  public wrongAnswerAnimation(element: any, answersId: number[],  answersToCorrect:number): void {
+    this.selectionActivate.state = false;
+    anime({
+      targets: element.elementContainer.nativeElement,
+      duration: 550,
+      loop: 2,
+      direction: 'alternate',      
+      backgroundColor: '#FF2D00',
+      easing: 'linear',
+      complete: () => {
+        this.selectionActivate.state = true;
+        answersId.forEach(id => {
+          this.restoreCellsColoursAndSelect(id)
+        }) 
+          if (this.answersCorrected >= answersToCorrect) {
+            this.feedbackService.endFeedback.emit();          
+       }
+      }
+    })
+  }
 
 
 
@@ -309,11 +413,16 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
 
+
+
   private nextExercise(exercise: TdiExercise) {
     this.addMetric();
     this.exercise = exercise;
+    console.log(this.exercise);
     this.challengeService.tablesIndex = this.restart ? 0 : this.challengeService.tablesIndex;
     this.currentExercise = this.exercise.table[this.challengeService.tablesIndex];
+    this.currentExerciseCopy = duplicateWithJSON(this.currentExercise)
+    this.answerService.isCompleteAnswer = this.currentExercise.exerciseType === 'Completar casilleros' ? true : false;
     this.newExercise = false;
     this.exerciseType = this.currentExercise.exerciseType;
     this.answerArray = [];
@@ -348,6 +457,11 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
   get correctGetter(): TableElement[] {
     return this.answerQuantityCalc();
+  }
+
+
+  get tableComponentArray(): any[] {
+      return this.tableValueComponentArr = this.tableValueComponent.toArray();
   }
 
 

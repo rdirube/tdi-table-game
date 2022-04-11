@@ -10,17 +10,22 @@ import { TdiChallengeService } from './tdi-challenge.service';
 export class TdiAnswerService extends AnswerService {
 
   public answer:TableElement[] = [];
+  public isCompleteAnswer!:boolean;
 
   protected isValidAnswer(answer: UserAnswer): boolean {
-    console.log(this.currentAnswer);
-    return this.currentAnswer.parts.every(part => part.parts.every(part => part.value !== ''))
+    if(this.isCompleteAnswer) {
+      return this.currentAnswer.parts.every(part => part.parts.every(part => part.value !== ''))
+    } else {
+      return this.currentAnswer.parts.every(part => part.parts.some(part => part.value !== null))
+    }
   }
+
+
 
   constructor(private gameActionsService: GameActionsService<any>,
     m: MicroLessonMetricsService<any>,
     private challenge: TdiChallengeService) {
       super(gameActionsService, m)
-
 
       this.gameActionsService.showNextChallenge.subscribe(value => {
         this.cleanAnswer();
@@ -31,6 +36,8 @@ export class TdiAnswerService extends AnswerService {
       });
     }
 
+
+    
 
     public cleanAnswer(): void {
       this.currentAnswer = { parts: [] };

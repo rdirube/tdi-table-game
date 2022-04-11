@@ -52,11 +52,11 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
     private composeService: ComposeService<TdiExercise>) {
       super()
       this.selectedFixed = false;
-      this.addSubscription(this.gameActions.checkedAnswer, x => {
-        if(this.element.isSelected) {
-          this.answerCorrection()
-        }   
-      })
+      // this.addSubscription(this.gameActions.checkedAnswer, x => {
+      //   if(this.element.isSelected) {
+      //     this.answerCorrection()
+      //   }   
+      // })
       // this.addSubscription(this.challengeService.actionToAnswerEmit, x => {
       //   this.isAnswerReady();
       // })
@@ -69,7 +69,6 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
     this.parsedTypes(this.element.elementType, this.element);
     this.setAnswer();
     this.element.isSelected = false;
-    console.log('tableComp');
 
   }
 
@@ -107,17 +106,20 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
   public focusCell(): void {
     const cellsNotAvaiable = this.element.elementType === 'hidden' || this.element.elementType === 'property';
     if(this.selectionActivate.state && !cellsNotAvaiable) {
-      if(this.element.elementType === 'empty') {
+      if(this.element.elementType === 'empty' || this.element.elementType === 'filled') {
+        if(this.element.elementType === 'filled') {
+          this.element.elementType = 'empty';
+        }
         this.wordInput.nativeElement.focus();
         this.element.value.text = '';
       } 
       if(this.element.elementType === 'selected-fixed') {
         this.element.elementType = 'fixed'; 
-        this.tableElementCorrectablePart(); 
+        this.challengeService.actionToAnswerEmit.emit() 
       }
       if(this.element.isSelected && this.element.elementType === 'fixed' && this.exerciseType === 'Seleccionar casilleros') {
        this.element.elementType = 'selected-fixed';
-       this.tableElementCorrectablePart();
+       this.challengeService.actionToAnswerEmit.emit() 
       }  
       this.restoreCellsColours.emit(this.element.id - 1);
       this.soundService.playSoundEffect('tdi/local-sounds/selectedInput.mp3', ScreenTypeOx.Game)
@@ -153,15 +155,15 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
 
-  public answerCorrection():void {
-    if(this.answer.answer === this.wordInput.nativeElement.value) {
-      this.correctAnswerAnimation();
-    } else {
-      this.wrongAnswerAnimation();
-    }
-    this.feedbackService.endFeedback.emit();
+  // public answerCorrection():void {
+  //   if(this.answer.answer === this.wordInput.nativeElement.value) {
+  //     this.correctAnswerAnimation();
+  //   } else {
+  //     this.wrongAnswerAnimation();
+  //   }
+  //   this.feedbackService.endFeedback.emit();
 
-  }
+  // }
 
 
 
@@ -177,34 +179,33 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
   // }
 
   
+ public correctableEmitter():void {
+  this.element.elementType = 'filled';
+  this.challengeService.actionToAnswerEmit.emit() 
+ }
 
 
 
 
 
-
-  public tableElementCorrectablePart(): void { 
-    if(this.exerciseType === 'Completar casilleros') {
-      this.element.elementType = this.wordInput.nativeElement.value !== '' ? 'filled' : 'empty';
-    }
-    const correctablePart = 
-       {
-        correctness: (this.answer.answer === this.wordInput.nativeElement.value ? 'correct' : 'wrong') as PartCorrectness,
-        parts: [
-          {
-            format: 'word-text' as PartFormat,
-            value: this.wordInput.nativeElement.value as string
-          }
-        ]
-      }
+  // public tableElementCorrectablePart(): void { 
+  //   if(this.exerciseType === 'Completar casilleros') {
+  //     this.element.elementType = this.wordInput.nativeElement.value !== '' ? 'filled' : 'empty';
+  //   }
+  //   const correctablePart = 
+  //      {
+  //       correctness: (this.answer.answer === this.wordInput.nativeElement.value ? 'correct' : 'wrong') as PartCorrectness,
+  //       parts: [
+  //         {
+  //           format: 'word-text' as PartFormat,
+  //           value: this.wordInput.nativeElement.value as string
+  //         }
+  //       ]
+  //     }
    
-    this.answerService.currentAnswer.parts.push(correctablePart);
-    if(this.element.elementType === 'empty') {
-      this.answerService.currentAnswer.parts.slice(this.answerService.currentAnswer.parts.length - 2 , 1);
-    }
-    console.log(this.answerService.currentAnswer.parts)
-      this.challengeService.actionToAnswerEmit.emit() 
-  }
+  //   this.answerService.currentAnswer.parts.push(correctablePart);
+  //   this.challengeService.actionToAnswerEmit.emit() 
+  // }
 
 
 
@@ -237,23 +238,23 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
 
-  public wrongAnswerAnimation():void {
-    this.selectionActivate.state = false;
-      anime({
-        targets: this.elementContainer.nativeElement,
-        duration: 550,
-        loop:2,
-        direction:'alternate',
-        keyframes: [{
-          backgroundColor: '#FF2D00'
-        }],
-        easing: 'linear',
-        complete: () => {
-          this.selectionActivate.state = true;
-          this.restoreCellsColours.emit(this.element.id - 1);
-        }    
-  })
-}
+//   public wrongAnswerAnimation():void {
+//     this.selectionActivate.state = false;
+//       anime({
+//         targets: this.elementContainer.nativeElement,
+//         duration: 550,
+//         loop:2,
+//         direction:'alternate',
+//         keyframes: [{
+//           backgroundColor: '#FF2D00'
+//         }],
+//         easing: 'linear',
+//         complete: () => {
+//           this.selectionActivate.state = true;
+//           this.restoreCellsColours.emit(this.element.id - 1);
+//         }    
+//   })
+// }
 
 
 
