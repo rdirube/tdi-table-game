@@ -5,7 +5,9 @@ import { AppInfoOxService, BaseMicroLessonApp, EndGameService, GameActionsServic
 import { PostMessageBridgeFactory } from 'ngox-post-message';
 import { CommunicationOxService, I18nService, PreloaderOxService, ResourceOx, ResourceType } from 'ox-core';
 import { ResourceFinalStateOxBridge, ScreenTypeOx } from 'ox-types';
+import { timer } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { TypographyOxService } from 'typography-ox';
 import { TdiChallengeService } from './shared/services/tdi-challenge.service';
 
 @Component({
@@ -28,7 +30,7 @@ export class AppComponent extends BaseMicroLessonApp {
     private _metrics: MicroLessonMetricsService<any>, // Todo
     resourceStateService: ResourceStateService,
     sound: SoundOxService, bridgeFactory: PostMessageBridgeFactory,
-    transloco: TranslocoService) {
+    transloco: TranslocoService, private typography: TypographyOxService) {
     super(preloader, translocoService, wumboxService, communicationOxService, microLessonCommunicationService,
       progressService, elementRef, _gameActionsService, endGame,
       i18nService, levelService, http, _challengeService, _appInfoService, _metrics, sound, bridgeFactory);

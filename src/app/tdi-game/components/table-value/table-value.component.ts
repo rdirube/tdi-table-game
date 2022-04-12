@@ -114,10 +114,11 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
         this.element.value.text = '';
       } 
       if(this.element.elementType === 'selected-fixed') {
-        this.element.elementType = 'fixed'; 
+        this.element.elementType = 'fixed';
+        this.element.isSelected = false; 
         this.challengeService.actionToAnswerEmit.emit() 
       }
-      if(this.element.isSelected && this.element.elementType === 'fixed' && this.exerciseType === 'Seleccionar casilleros') {
+     else if(this.element.elementType === 'fixed' && this.exerciseType === 'Seleccionar casilleros') {
        this.element.elementType = 'selected-fixed';
        this.challengeService.actionToAnswerEmit.emit() 
       }  

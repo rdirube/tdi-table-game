@@ -79,6 +79,7 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
   public exerciseType!: ExerciseType;
   private currentExerciseCopy!: Table;
   private answersCorrected!:number;
+  private answerCurrentIndex!:number;
 
   constructor(private challengeService: TdiChallengeService,
     private metricsService: MicroLessonMetricsService<any>,
@@ -108,6 +109,7 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
     this.composeService.decomposeTime = 650;
     this.answerService.isCompleteAnswer = true;
     this.answersCorrected = 0;
+    this.answerCurrentIndex = 0;
     this.addSubscription(this.challengeService.currentExercise.pipe(filter(x => x === undefined)),
       (exercise: ExerciseOx<TdiExercise>) => {
         this.exercise = undefined as any;
@@ -118,14 +120,14 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
         const tableExerciseQuantity = this.exercise ? this.currentExercise.tableElements.filter(el => el.isAnswer).length : 1000;
         const correctAnswers = this.exercise ? this.currentExercise.tableElements.filter(el => el.elementType === 'correct').length : 0;
         const allExerciseCorrectVal = this.challengeService.exerciseConfig.tables.length - 1 === this.challengeService.tablesIndex && this.exercise ? this.allExerciseAreCorrectValidator() : false;
-        this.avaiableHints = duplicateWithJSON(this.challengeService.exerciseConfig.advancedSettings);
-        this.hintService.usesPerChallenge = this.hintsAvaiableCalculator();
         if (tableExerciseQuantity <= correctAnswers && !allExerciseCorrectVal) {
           this.challengeService.tablesIndex++;
           this.selectionActivate.state = false;
           this.restart = false;
           this.composeEvent.emit();
         }
+        this.avaiableHints = duplicateWithJSON(this.challengeService.exerciseConfig.advancedSettings);
+        this.hintService.usesPerChallenge = this.hintsAvaiableCalculator();
         if (this.metricsService.currentMetrics.expandableInfo?.exercisesData.length as number > 0) {
           return;
         }
@@ -159,25 +161,41 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
       this.tableCorrectablePart();
     })
     this.addSubscription(this.gameActions.checkedAnswer, x => {
-      const exerciseAnswers = this.currentExerciseCopy.tableElements.filter(el => el.isAnswer).map(el => el.value.text);      const filledCells = this.currentExercise.tableElements.filter(el => el.elementType === 'filled');
+      const selectedCell = this.tableElements.find(el => el.isSelected);
+      if(selectedCell) {
+        selectedCell.isSelected = false;
+      }
+      const exerciseAnswers = this.currentExerciseCopy.tableElements.filter(el => el.isAnswer).map(el => el.value.text);      
+      const filledCells = this.currentExercise.tableElements.filter(el => el.elementType === 'filled');
       const selectedFixedCells = this.currentExercise.tableElements.filter(el => el.elementType === 'selected-fixed')
       const exerciseTypeCondition =  this.currentExercise.exerciseType === 'Completar casilleros'
       const answerDisplayed = exerciseTypeCondition ? filledCells.map(el => el.value.text) : selectedFixedCells.map(el => el.value.text);
       const answersId = exerciseTypeCondition ? filledCells.map(el => el.id - 1) : selectedFixedCells.map(el => el.id - 1);
-      const answersToCompare = exerciseTypeCondition ? answerDisplayed.length : exerciseAnswers.length; 
-      answerDisplayed.forEach((ans,i) => {
-        if(exerciseAnswers.includes(ans)) {
-          this.answersCorrected++
-          this.correctAnswerAnimation(this.elementCorrected(answersId[i], 'correct'),  answersToCompare);
-        } else {
-          this.wrongAnswerAnimation(this.elementCorrected(answersId[i]), answersId, answersToCompare)
-        }
-      })
+      this.animationToPlay(answerDisplayed, exerciseAnswers, answersId);
+
     })
 
   }
 
 
+
+  private animationToPlay(answerDisplayed:string[], exerciseAnswers:string[], answersId:number[]):void {
+    if(answersId.length !== 0) {
+      if(exerciseAnswers.includes(answerDisplayed[this.answerCurrentIndex])) {
+        this.answersCorrected++
+        this.correctAnswerAnimation(this.elementCorrected(answersId[this.answerCurrentIndex], 'correct'),  answerDisplayed, exerciseAnswers, answersId);
+      } else {
+        this.wrongAnswerAnimation(this.elementCorrected(answersId[this.answerCurrentIndex]), answersId, answerDisplayed, exerciseAnswers)
+      }
+      this.answerCurrentIndex++;
+    } else {
+      timer(300).subscribe(x => {
+        this.feedbackService.endFeedback.emit();
+
+      })
+      console.log(this.answerService.currentAnswer);
+    }
+  }
 
 
 
@@ -230,13 +248,16 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
 
-  private elementCorrected(index:number, correctness?: ElementType) {
+
+  private elementCorrected(index?:number, correctness?: ElementType) {
     let correctElementContainer = '' as any;
-    if(correctness === 'correct') {
-      this.tableElements[index].elementType = correctness;
-    }
-    this.tableElements[index].isSelected = false;
-    correctElementContainer = this.tableComponentArray[index];
+    if(index !== undefined) {
+      if(correctness === 'correct') {
+        this.tableElements[index].elementType = correctness;
+      }
+      this.tableElements[index].isSelected = false;
+      correctElementContainer = this.tableComponentArray[index];
+    }  
     return correctElementContainer;
   }
 
@@ -292,7 +313,7 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
   public restoreCellsColoursAndSelect(id: number) {
     this.restoreCellsColour();
     const typesAllowToSelect = (((this.tableElements[id].elementType === 'empty' || this.tableElements[id].elementType === 'filled') && this.currentExercise.exerciseType === 'Completar casilleros') || (this.tableElements[id].elementType === 'fixed' && this.currentExercise.exerciseType === 'Seleccionar casilleros') || this.currentExercise.tableElements[id].isSelected);
-    if (typesAllowToSelect && this.selectionActivate.state) {
+    if (typesAllowToSelect && this.selectionActivate.state && this.exerciseType === 'Completar casilleros') {
       this.tableElements[id].isSelected = true;
     }
   }
@@ -300,7 +321,7 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
 
-  public correctAnswerAnimation(element: any, answersToCorrect:number): void {
+  public correctAnswerAnimation(element: any, answerDisplayed:string[], exerciseAnswers:string[], answersId:number[]): void {
     this.selectionActivate.state = false;
     anime({
       targets: element.elementRef.nativeElement,
@@ -317,8 +338,15 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
       ],
       duration: 900,
       easing: 'linear',
-      complete: () => {
-         if(this.answersCorrected >= answersToCorrect) {
+      complete: () => {  
+         if(answerDisplayed.length > this.answerCurrentIndex) {
+          this.animationToPlay(answerDisplayed, exerciseAnswers, answersId);
+         } else {
+           this.answerCurrentIndex = 0;
+           this.selectionActivate.state = true;
+
+         }  
+         if(this.answersCorrected >= answerDisplayed.length) {
           this.feedbackService.endFeedback.emit();
           this.answersCorrected = 0;
          } else {
@@ -330,7 +358,9 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
 
-  public wrongAnswerAnimation(element: any, answersId: number[],  answersToCorrect:number): void {
+
+
+  public wrongAnswerAnimation(element: any, answersId: number[],  answerDisplayed:string[], exerciseAnswers:string[]): void {
     this.selectionActivate.state = false;
     anime({
       targets: element.elementContainer.nativeElement,
@@ -344,8 +374,11 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
         answersId.forEach(id => {
           this.restoreCellsColoursAndSelect(id)
         }) 
-          if (this.answersCorrected >= answersToCorrect) {
-            this.feedbackService.endFeedback.emit();          
+          if (this.answerCurrentIndex < answerDisplayed.length) {
+            this.animationToPlay(answerDisplayed, exerciseAnswers, answersId)
+       } else {
+         this.answerCurrentIndex = 0;
+         this.feedbackService.endFeedback.emit();          
        }
       }
     })
@@ -390,14 +423,22 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
   private surrender(): void {
-    const answerId = this.currentExercise.tableElements.map(el => el.id).find(id => this.currentExercise.tableElements[id - 1].isAnswer && this.currentExercise.tableElements[id - 1].elementType !== 'correct');
-    const tableArrayCurrentValue = this.tableValueComponent.toArray()
-    if (this.currentExercise.tableElements[(answerId as number) - 1].elementType === 'empty') {
-      tableArrayCurrentValue[(answerId as number) - 1].element.value.text = this.answerArray[(answerId as number) - 1].answer;
+    const answerId = this.currentExercise.tableElements.map(el => el.id).filter(id => this.currentExercise.tableElements[id - 1].isAnswer && this.currentExercise.tableElements[id - 1].elementType !== 'correct');
+    const tableArrayCurrentValue = this.tableValueComponent.toArray();
+    answerId.forEach(id => {     
+    if (this.currentExercise.tableElements[id - 1].elementType === 'filled' || this.currentExercise.tableElements[id - 1].elementType === 'empty') {
+      tableArrayCurrentValue[id - 1].element.value.text = this.answerArray[id - 1].answer;
     }
-    tableArrayCurrentValue[(answerId as number) - 1].correctAnswerAnimation();
+    tableArrayCurrentValue[id - 1].correctAnswerAnimation();
+    })
+    // if (this.currentExercise.tableElements[(answerId as number) - 1].elementType === 'empty') {
+    //   tableArrayCurrentValue[(answerId as number) - 1].element.value.text = this.answerArray[(answerId as number) - 1].answer;
+    // }
+    // tableArrayCurrentValue[(answerId as number) - 1].correctAnswerAnimation();
     this.selectionActivate.state = false;
     this.restoreCellsColour();
+    const fixedSelected =  this.tableElements.filter(el => el.elementType === 'selected-fixed');
+    fixedSelected.forEach(el => el.elementType = 'fixed');
     this.feedbackService.surrenderEnd.emit()
       ;
   }
