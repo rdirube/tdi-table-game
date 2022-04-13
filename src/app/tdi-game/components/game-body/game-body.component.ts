@@ -174,9 +174,10 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
       this.animationToPlay(answerDisplayed, exerciseAnswers, answersId);
 
     })
-
   }
 
+
+  
 
 
   private animationToPlay(answerDisplayed:string[], exerciseAnswers:string[], answersId:number[]):void {
@@ -191,7 +192,6 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
     } else {
       timer(300).subscribe(x => {
         this.feedbackService.endFeedback.emit();
-
       })
       console.log(this.answerService.currentAnswer);
     }

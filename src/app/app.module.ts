@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { AnswerService, ChallengeService } from 'micro-lesson-core';
+import { AnswerService, ChallengeService, ScoreStarsService } from 'micro-lesson-core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HttpClientModule } from '@angular/common/http';
@@ -9,6 +9,7 @@ import { TdiChallengeService } from './shared/services/tdi-challenge.service';
 import { SharedModule } from './shared/shared.module';
 import { TdiGameModule } from './tdi-game/tdi-game.module';
 import { TranslocoRootModule } from './transloco-root.module';
+import { TdiScoreService } from './shared/services/tdi-score.service';
 
 
 @NgModule({
@@ -32,6 +33,10 @@ import { TranslocoRootModule } from './transloco-root.module';
       provide: AnswerService,
       useExisting: TdiAnswerService
     },
+    {
+      provide: ScoreStarsService,
+      useExisting:TdiScoreService
+    }
    ],
   bootstrap: [AppComponent]
 })
