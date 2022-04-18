@@ -193,7 +193,6 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
       timer(300).subscribe(x => {
         this.feedbackService.endFeedback.emit();
       })
-      console.log(this.answerService.currentAnswer);
     }
   }
 
@@ -344,7 +343,6 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
          } else {
            this.answerCurrentIndex = 0;
            this.selectionActivate.state = true;
-
          }  
          if(this.answersCorrected >= answerDisplayed.length) {
           this.feedbackService.endFeedback.emit();
@@ -371,9 +369,6 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
       easing: 'linear',
       complete: () => {
         this.selectionActivate.state = true;
-        answersId.forEach(id => {
-          this.restoreCellsColoursAndSelect(id)
-        }) 
           if (this.answerCurrentIndex < answerDisplayed.length) {
             this.animationToPlay(answerDisplayed, exerciseAnswers, answersId)
        } else {
@@ -390,6 +385,9 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
   //RECORDAR CAMBIAR
   private addMetric(): void {
     const myMetric: ExerciseData = {
+      extraInfo: {
+        isInput: this.currentExercise.exerciseType === 'Completar casilleros' ? 'Completar casilleros' : 'Seleccionar casilleros'
+      },
       schemaType: 'multiple-choice',
       schemaData: {
 
