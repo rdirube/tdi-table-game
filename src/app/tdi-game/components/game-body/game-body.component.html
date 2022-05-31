@@ -12,7 +12,7 @@
         <ox-text [originalText]="statement.text"   fontSize="3.1vh" color="black" font="dinnRegular">
         </ox-text>
         <mlc-sound-button  svgPath="tdi/svg/buttons/sonido-activado.svg" *ngIf="statement.audio"
-    style="width: 13.5vh;transform: translate(2vh, -0.5vh);cursor: pointer; " (click)="playLoadedSound(currentExercise.statement.audio)">
+    style="width: 50px;transform: translate(2vh, -0.5vh);cursor: pointer; " (click)="playLoadedSound(currentExercise.statement.audio)">
     </mlc-sound-button>
       </div>
       <mlc-hint-button style="width: 13vh; opacity: 1;"
