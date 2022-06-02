@@ -179,27 +179,6 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
 
 
 
-
-//   public wrongAnswerAnimation():void {
-//     this.selectionActivate.state = false;
-//       anime({
-//         targets: this.elementContainer.nativeElement,
-//         duration: 550,
-//         loop:2,
-//         direction:'alternate',
-//         keyframes: [{
-//           backgroundColor: '#FF2D00'
-//         }],
-//         easing: 'linear',
-//         complete: () => {
-//           this.selectionActivate.state = true;
-//           this.restoreCellsColours.emit(this.element.id - 1);
-//         }    
-//   })
-// }
-
-
-
 public playLoadedSound(sound: string) {
   this.soundService.playSoundEffect(sound, ScreenTypeOx.Game);
 }
