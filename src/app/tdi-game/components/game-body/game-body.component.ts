@@ -232,7 +232,7 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
   private hintsAvaiableCalculator(): number {
-    const hiddenAvaiable = this.challengeService.exerciseConfig.tables[this.challengeService.tablesIndex].tableElements.find(el => el.elementType === 'Tapado') && this.avaiableHints.find(hint => hint === "Desbloquear tapados") ? true : false;
+    const hiddenAvaiable = this.challengeService.exerciseConfig.tables[this.challengeService.tablesIndex].tableElements.find(el => el.elementType === 'Tapado') && this.avaiableHints ? this.avaiableHints.find(hint => hint === "Desbloquear tapados") ? true : false : false;
     if (this.challengeService.exerciseConfig.advancedSettings) {
       if (hiddenAvaiable) {
         return this.challengeService.exerciseConfig.advancedSettings.length;
