@@ -275,13 +275,9 @@ export class GameBodyComponent extends SubscriberOxDirective implements OnInit, 
 
 
 
-
-
   public playLoadedSound(sound: string) {
     this.soundService.playSoundEffect(sound, ScreenTypeOx.Game);
   }
-
-
 
 
 

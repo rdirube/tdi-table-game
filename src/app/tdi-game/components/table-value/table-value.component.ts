@@ -52,14 +52,6 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
     private composeService: ComposeService<TdiExercise>) {
       super()
       this.selectedFixed = false;
-      // this.addSubscription(this.gameActions.checkedAnswer, x => {
-      //   if(this.element.isSelected) {
-      //     this.answerCorrection()
-      //   }   
-      // })
-      // this.addSubscription(this.challengeService.actionToAnswerEmit, x => {
-      //   this.isAnswerReady();
-      // })
   }
 
 
@@ -151,64 +143,13 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
     }
   }
 
-  
 
-
-
-
-  // public answerCorrection():void {
-  //   if(this.answer.answer === this.wordInput.nativeElement.value) {
-  //     this.correctAnswerAnimation();
-  //   } else {
-  //     this.wrongAnswerAnimation();
-  //   }
-  //   this.feedbackService.endFeedback.emit();
-
-  // }
-
-
-
-
-
-
-  // private isAnswerReady() : void {
-  //   const emptyCondition = this.element.elementType === 'empty' && this.element.value.text !== '';
-  //   const fixedCondition = this.element.elementType === 'fixed' && this.element.isSelected;
-  //   if (fixedCondition || emptyCondition) {
-  //     this.gameActions.actionToAnswer.emit()
-  //   }
-  // }
 
   
  public correctableEmitter():void {
   this.element.elementType = 'filled';
   this.challengeService.actionToAnswerEmit.emit() 
  }
-
-
-
-
-
-  // public tableElementCorrectablePart(): void { 
-  //   if(this.exerciseType === 'Completar casilleros') {
-  //     this.element.elementType = this.wordInput.nativeElement.value !== '' ? 'filled' : 'empty';
-  //   }
-  //   const correctablePart = 
-  //      {
-  //       correctness: (this.answer.answer === this.wordInput.nativeElement.value ? 'correct' : 'wrong') as PartCorrectness,
-  //       parts: [
-  //         {
-  //           format: 'word-text' as PartFormat,
-  //           value: this.wordInput.nativeElement.value as string
-  //         }
-  //       ]
-  //     }
-   
-  //   this.answerService.currentAnswer.parts.push(correctablePart);
-  //   this.challengeService.actionToAnswerEmit.emit() 
-  // }
-
-
 
 
 
@@ -235,27 +176,6 @@ export class TableValueComponent extends SubscriberOxDirective implements OnInit
     })
   }
 
-
-
-
-
-//   public wrongAnswerAnimation():void {
-//     this.selectionActivate.state = false;
-//       anime({
-//         targets: this.elementContainer.nativeElement,
-//         duration: 550,
-//         loop:2,
-//         direction:'alternate',
-//         keyframes: [{
-//           backgroundColor: '#FF2D00'
-//         }],
-//         easing: 'linear',
-//         complete: () => {
-//           this.selectionActivate.state = true;
-//           this.restoreCellsColours.emit(this.element.id - 1);
-//         }    
-//   })
-// }
 
 
 
